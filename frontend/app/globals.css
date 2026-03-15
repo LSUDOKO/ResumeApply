@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #c8ff00;
+  --color-background-light: #f8f8f5;
+  --color-background-dark: #0f0f0f;
+  --color-neutral-dark: #1a1a1a;
+  
+  --font-display: "Space Grotesk", sans-serif;
+  --font-bebas: "Bebas Neue", cursive;
+  --font-mono: "Space Mono", monospace;
+  
+  --radius-DEFAULT: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+}
+
+@layer base {
+  body {
+    @apply font-display bg-background-light text-slate-900 transition-colors duration-300 antialiased;
+  }
+  
+  .dark body {
+    @apply bg-background-dark text-slate-100;
+  }
+}
+
+@layer components {
+  .brutalist-border {
+    @apply border-2 border-black;
+  }
+  
+  .dark .brutalist-border {
+    @apply border-2 border-white;
+  }
+  
+  .ticker-wrap {
+    @apply overflow-hidden whitespace-nowrap;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(200, 255, 0, 0.2);
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  .scan-line {
+    height: 2px;
+    background: #c8ff00;
+    box-shadow: 0 0 15px #c8ff00;
+    position: absolute;
+    width: 100%;
+    z-index: 10;
+  }
+  
+  .waveform-bar {
+    width: 4px;
+    background-color: #c8ff00;
+    margin: 0 1px;
+    border-radius: 2px;
+  }
+}
+
+/* Base GSAP Hidden states */
+.gsap-reveal {
+  opacity: 0;
+}

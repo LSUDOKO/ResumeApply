@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ResumeApply Agent — Hackathon Submission
 
-## Getting Started
+This project is a full-stack autonomous job application agent built for the Google Gemini Live Agent Challenge.
 
-First, run the development server:
+## 🚀 Quick Start Instructions
 
+### 1. Prerequisites
+- **Gemini API Key**: Obtain one from [Google AI Studio](https://aistudio.google.com/).
+- **Python 3.11+** and **Node.js 20+**.
+
+---
+
+### 2. Backend Setup (FastAPI)
+Navigate to the backend directory and set up the environment:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+playwright install chromium
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Environment Variables**:
+Create a `.env` file in the `backend/` folder:
+```env
+GEMINI_API_KEY=your_api_key_here
+PROJECT_ID=your_gcp_project_id
+GCS_BUCKET=your_bucket_name
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Run Server**:
+```bash
+uvicorn main:app --reload --port 8000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+### 3. Frontend Setup (Next.js)
+Navigate to the frontend directory:
+```bash
+cd frontend
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+**Environment Variables**:
+Create a `.env.local` file in the `frontend/` folder:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Run Development Server**:
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+### 4. Verification Flow
+1. Open `http://localhost:3000` in your browser.
+2. **Step 1**: Upload your resume (PDF/DOCX) on the `/upload` page.
+3. **Step 2**: Set preferences on the `/preferences` page.
+4. **Step 3**: Launch the agent! Watch the live feed and reasoning logs on the `/dashboard`.
+5. **Step 4**: Track status on the `/tracker` page.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛠 Tech Stack
+- **Frontend**: Next.js 14, GSAP (Animations), Zustand (State), WebSocket client.
+- **Backend**: FastAPI, Google ADK (Agent Development Kit), Gemini 2.0 Flash (Multimodal reasoning).
+- **Agent Tools**: Playwright (Browser control), Gemini Vision (Page understanding).
