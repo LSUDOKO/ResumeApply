@@ -34,7 +34,8 @@ The agent doesn't get stuck. When it encounters a **CAPTCHA**, **MFA**, or an am
 | **Engine** | Playwright (Stealth Mode), Google Generative AI ADK |
 
 ---
-<img width="8020" height="8020" alt="image" src="https://github.com/user-attachments/assets/8d8f2325-4ade-44bc-9c1b-8dd374d173cd" />
+<img width="1262" height="841" alt="image" src="https://github.com/user-attachments/assets/97f648ee-5488-4fc7-a527-1bc64ff482bf" />
+
 
 ## 🚀 Getting Started
 
