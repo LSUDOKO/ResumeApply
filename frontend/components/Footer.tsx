@@ -22,16 +22,6 @@ export default function Footer() {
                         <span className="text-background-dark font-black text-xs uppercase italic tracking-tighter">LinkedIn Complete → Switching to Naukri</span>
                     </div>
                 </div>
-                <style jsx>{`
-          @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .animate-marquee {
-            display: flex;
-            animation: marquee 20s linear infinite;
-          }
-        `}</style>
             </footer>
         );
     }
