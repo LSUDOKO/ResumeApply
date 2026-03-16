@@ -16,8 +16,9 @@ async def start_agent(
     preferences = payload["preferences"]
     voice_command = payload.get("voice_command", "")
     
-    from lib.local_db import db
-    session_data = db.get_session(session_id)
+    from lib.supabase_db import db as supabase
+    session_data = supabase.get_session(session_id)
+    # session_data from supabase single() join returns a dict with 'profile' key
     profile = session_data.get("profile", {}) if session_data else {}
 
     agent_context = f"Voice Command: {voice_command}. Prefs: {preferences}. Profile: {profile}"

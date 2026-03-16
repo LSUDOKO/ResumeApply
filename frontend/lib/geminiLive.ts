@@ -22,27 +22,14 @@ export class GeminiLiveClient {
             }
         })
 
-        const response = await fetch('/api/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ system_prompt: systemPrompt })
+        this.pc = new RTCPeerConnection({
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         })
 
-        const { offer, sessionId } = await response.json()
-
-        this.pc = new RTCPeerConnection()
-
+        // ── 1. Track handling ──
         this.mediaStream.getTracks().forEach(track => {
             this.pc!.addTrack(track, this.mediaStream!)
         })
-
-        this.dc = this.pc.createDataChannel('events')
-        this.dc.onmessage = (event) => {
-            const data = JSON.parse(event.data)
-            if (data.type === 'transcript') {
-                this.onTranscript(data.text)
-            }
-        }
 
         this.pc.ontrack = (event) => {
             const audio = new Audio()
@@ -50,14 +37,33 @@ export class GeminiLiveClient {
             audio.play()
         }
 
-        await this.pc.setRemoteDescription(offer)
-        const answer = await this.pc.createAnswer()
-        await this.pc.setLocalDescription(answer)
+        // ── 2. Create Offer ──
+        const offer = await this.pc.createOffer()
+        await this.pc.setLocalDescription(offer)
 
-        await fetch(`/api/session/${sessionId}/answer`, {
+        // ── 3. Handshake ──
+        const response = await fetch('/api/voice/session', {
             method: 'POST',
-            body: JSON.stringify({ answer })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                system_prompt: systemPrompt,
+                offer: { sdp: offer.sdp, type: offer.type }
+            })
         })
+
+        const { answer, session_id } = await response.json()
+        await this.pc.setRemoteDescription(new RTCSessionDescription(answer))
+
+        // ── 4. ICE Trickle ──
+        this.pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                fetch(`/api/voice/session/${session_id}/ice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(event.candidate.toJSON())
+                }).catch(err => console.error("ICE trickle failed", err))
+            }
+        }
     }
 
     sendTextToAgent(text: string) {
