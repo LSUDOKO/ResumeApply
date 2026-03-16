@@ -30,7 +30,7 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "wrangler": "^3.109.2",
+    "wrangler": "^4.65.0",
     "@opennextjs/cloudflare": "^1.17.1"
   }
 }
