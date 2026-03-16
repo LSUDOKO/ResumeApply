@@ -2,8 +2,7 @@
     "name": "resumeapply-monorepo",
     "private": true,
     "workspaces": [
-        "frontend",
-        "backend"
+        "frontend"
     ],
     "scripts": {
         "frontend:build": "npm run build --prefix frontend",
