@@ -1,10 +1,36 @@
-# ResumeApply: The Autonomous Job Search Agent
+<div align="center">
 
-[![Gemini Live Agent Challenge](https://img.shields.io/badge/Challenge-Gemini%20Live%20Agent-blueviolet?style=for-the-badge&logo=google-gemini)](https://aistudio.google.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Cloud Run](https://img.shields.io/badge/Backend-Cloud%20Run-blue?style=for-the-badge&logo=google-cloud)](https://cloud.google.com/run)
+<img src="https://img.shields.io/badge/Google%20Gemini-Live%20Agent%20Challenge-blueviolet?style=for-the-badge&logo=google-gemini&logoColor=white" />
+<img src="https://img.shields.io/badge/Backend-Cloud%20Run-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" />
+<img src="https://img.shields.io/badge/AI-Gemini%202.0%20Flash-FF6F00?style=for-the-badge&logo=google&logoColor=white" />
+<img src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge" />
 
-**ResumeApply** is an autonomous job application agent built for the **Google Gemini Live Agent Challenge**. It combines real-time WebRTC voice commands with Gemini multimodal vision to control a real browser — finding jobs, filling forms, and hitting Submit on your behalf.
+<br /><br />
+
+```
+██████╗ ███████╗███████╗██╗   ██╗███╗   ███╗███████╗ █████╗ ██████╗ ██████╗ ██╗  ██╗   ██╗
+██╔══██╗██╔════╝██╔════╝██║   ██║████╗ ████║██╔════╝██╔══██╗██╔══██╗██╔══██╗██║  ╚██╗ ██╔╝
+██████╔╝█████╗  ███████╗██║   ██║██╔████╔██║█████╗  ███████║██████╔╝██████╔╝██║   ╚████╔╝ 
+██╔══██╗██╔══╝  ╚════██║██║   ██║██║╚██╔╝██║██╔══╝  ██╔══██║██╔═══╝ ██╔═══╝ ██║    ╚██╔╝  
+██║  ██║███████╗███████║╚██████╔╝██║ ╚═╝ ██║███████╗██║  ██║██║     ██║     ███████╗██║   
+╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚══════╝╚═╝   
+```
+
+### Your job search, **AUTOMAT\*D.**
+
+*An autonomous AI agent that talks to you, sees the web, and applies to jobs — while you do literally anything else.*
+
+</div>
+
+---
+
+## What is this?
+
+ResumeApply is a **UI Navigator agent** built for the Google Gemini Live Agent Challenge.
+
+You upload your resume. You say "Apply to senior React roles in NYC above 180k." The agent opens a real browser, navigates LinkedIn, reads job listings with its eyes (Gemini Vision), fills every form field, and hits Submit — all while streaming a live feed back to your dashboard.
+
+No DOM scraping. No brittle CSS selectors. Pure multimodal visual understanding.
 
 ---
 
@@ -14,59 +40,97 @@
 
 ---
 
-## Key Features
+## How it works
 
-- **Voice Control** — Talk to the agent live via Gemini Multimodal Live API + WebRTC. Say "Apply to senior React roles in NYC above 180k" and watch it go.
-- **Multimodal Vision** — The agent *sees* the browser via screenshots analyzed by Gemini 2.0 Flash. No DOM scraping, no brittle CSS selectors — pure visual understanding.
-- **Autonomous Form Filling** — Gemini maps resume data to form fields and types into each one using coordinate-based clicks.
-- **Human-in-the-Loop** — CAPTCHA or MFA detected? Agent pauses, alerts you via WebSocket overlay, resumes when you click Done.
-- **Live Dashboard** — Real-time browser feed, agent reasoning stream, voice command panel, and application stats — all updating over WebSocket.
-- **Google Cloud Native** — Backend on Cloud Run, CI/CD via Cloud Build, resume storage on GCS.
+```
+You speak a command
+       ↓
+Gemini Live API (WebRTC) transcribes it in real-time
+       ↓
+FastAPI agent task spawns on Cloud Run
+       ↓
+Playwright opens a browser (per-session, stealth mode)
+       ↓
+Agent takes screenshot → Gemini 2.0 Flash analyzes it
+       ↓
+navigate_tool clicks elements by visual coordinates
+       ↓
+form_fill_tool maps your resume to each field → types it in
+       ↓
+Screenshots + events stream to your dashboard over WebSocket
+       ↓
+CAPTCHA? Agent pauses → you resolve it → agent continues
+       ↓
+Every application logged with company, role, match score, timestamp
+```
+
+---
+
+## Features
+
+**Voice-first control**
+Talk to the agent live. Powered by Gemini Multimodal Live API over WebRTC. Interrupt it mid-session. It listens.
+
+**Multimodal vision**
+The agent sees the browser the same way you do — screenshots analyzed by Gemini 2.0 Flash. It finds buttons, inputs, and job cards by visual description, not code.
+
+**Autonomous form filling**
+Gemini maps your resume profile to every form field. The agent clicks the field by coordinate, clears it, and types your data. Multi-step forms handled step by step.
+
+**Human-in-the-loop**
+CAPTCHA or MFA detected? The agent pauses, sends a WebSocket alert, and shows an overlay on your dashboard. You resolve it, click Done, agent resumes exactly where it left off.
+
+**Live dashboard**
+Real-time browser feed, agent reasoning stream, voice command panel, application counter — all updating over WebSocket as the agent works.
+
+**Google Cloud native**
+Backend on Cloud Run. CI/CD via Cloud Build. Resume storage on GCS. Automated IaC deployment in one command.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technologies |
-| :--- | :--- |
-| Frontend | Next.js 14, Zustand, GSAP, TailwindCSS, WebRTC |
-| Backend | FastAPI, Python 3.11, WebSockets |
+| Layer | Tech |
+|---|---|
+| Frontend | Next.js 14, TypeScript, Zustand, GSAP, TailwindCSS |
+| Backend | FastAPI, Python 3.11, WebSockets, asyncio |
 | AI | Gemini 2.0 Flash (Vision + Text), Gemini Live API, Google ADK |
-| Browser Engine | Playwright (stealth mode, per-session instances) |
-| Cloud | Google Cloud Run, Google Cloud Build, Google Cloud Storage |
-| Storage | GCS (resumes), Local JSON DB (sessions) |
+| Browser | Playwright — stealth mode, per-session instances |
+| Cloud | Cloud Run, Cloud Build, Cloud Storage, Firebase Hosting |
 
 ---
 
-## Spin-Up Instructions
+## Quickstart
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 20+
-- A Gemini API key from [Google AI Studio](https://aistudio.google.com/)
-- (For GCP deploy) `gcloud` CLI authenticated
+- Gemini API key from [Google AI Studio](https://aistudio.google.com/)
 
-### 1. Clone & configure
+### 1. Clone
 
 ```bash
 git clone https://github.com/LSUDOKO/ResumeApply.git
 cd ResumeApply
 ```
 
-**Backend** — create `backend/.env`:
+### 2. Configure environment
+
+`backend/.env`:
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 PROJECT_ID=your_gcp_project_id
 GCS_BUCKET=your_gcs_bucket_name
 ```
 
-**Frontend** — create `frontend/.env.local`:
+`frontend/.env.local`:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_WS_URL=ws://localhost:8000
 ```
 
-### 2. Run the backend
+### 3. Backend
 
 ```bash
 cd backend
@@ -77,9 +141,9 @@ playwright install chromium
 python main.py
 ```
 
-Backend runs at `http://localhost:8000`. API docs at `http://localhost:8000/docs`.
+Runs at `http://localhost:8000` — API docs at `/docs`.
 
-### 3. Run the frontend
+### 4. Frontend
 
 ```bash
 cd frontend
@@ -87,41 +151,41 @@ npm install
 npm run dev
 ```
 
-Frontend runs at `http://localhost:3000`.
+Runs at `http://localhost:3000`.
 
-### 4. Use the app
+### 5. Run it
 
 1. Go to `http://localhost:3000`
-2. Upload your resume (PDF or DOCX)
-3. Set job preferences (role, salary, remote)
+2. Drop your resume (PDF or DOCX)
+3. Set your target role, salary, job type
 4. Click **Unleash the Agent**
-5. Watch the live browser feed on the dashboard
+5. Watch the live browser feed
 
 ---
 
 ## Google Cloud Deployment
 
-### Automated (Cloud Build IaC)
+### One command (IaC via Cloud Build)
 
 ```bash
 gcloud builds submit \
   --config deployment/cloudbuild.yaml \
-  --substitutions _GEMINI_API_KEY="your_key",_GCS_BUCKET="your_bucket",_FIREBASE_TOKEN="your_token"
+  --substitutions \
+    _GEMINI_API_KEY="your_key",\
+    _GCS_BUCKET="your_bucket",\
+    _FIREBASE_TOKEN="your_token"
 ```
 
-This will:
-1. Build and push the backend Docker image to GCR
-2. Deploy backend to Cloud Run (2 CPU, 2GB RAM, us-central1)
-3. Build and deploy frontend to Firebase Hosting
+This builds the Docker image, pushes to GCR, deploys to Cloud Run (2 CPU / 2GB), and deploys the frontend to Firebase Hosting.
 
 ### Manual Cloud Run deploy
 
 ```bash
-# Build image
+# Build + push
 docker build -t gcr.io/YOUR_PROJECT_ID/resumeapply-backend ./backend
 docker push gcr.io/YOUR_PROJECT_ID/resumeapply-backend
 
-# Deploy to Cloud Run
+# Deploy
 gcloud run deploy resumeapply-backend \
   --image gcr.io/YOUR_PROJECT_ID/resumeapply-backend \
   --region us-central1 \
@@ -139,35 +203,40 @@ gcloud run deploy resumeapply-backend \
 ```
 ResumeApply/
 ├── backend/
-│   ├── agents/resume_agent.py      # ADK agent with full LinkedIn workflow
+│   ├── agents/
+│   │   └── resume_agent.py         # ADK agent — full LinkedIn workflow
 │   ├── tools/
-│   │   ├── screenshot_tool.py      # Gemini Vision analysis + WS broadcast
-│   │   ├── navigate_tool.py        # Visual click/type/fill via coordinates
-│   │   └── form_fill_tool.py       # Field mapping + actual browser filling
+│   │   ├── screenshot_tool.py      # Gemini Vision + WS broadcast (per-session browser)
+│   │   ├── navigate_tool.py        # Visual click / type / fill / scroll
+│   │   └── form_fill_tool.py       # Field mapping + actual browser filling + DB persist
 │   ├── routers/
-│   │   ├── resume.py               # Upload + Gemini parse endpoint
-│   │   ├── agent.py                # Start/stop/pause/results endpoints
-│   │   ├── websocket.py            # Real-time WS + intervention handling
-│   │   └── session.py              # WebRTC session for Gemini Live voice
+│   │   ├── resume.py               # POST /api/resume/upload
+│   │   ├── agent.py                # start / stop / pause / resume / results
+│   │   ├── websocket.py            # WS manager + intervention futures
+│   │   └── session.py              # WebRTC SDP offer/answer for Gemini Live
 │   ├── lib/
-│   │   ├── gemini_helper.py        # Model fallback chain
+│   │   ├── gemini_helper.py        # Model fallback: flash → 2.0-flash → pro
 │   │   ├── local_db.py             # JSON session + application storage
-│   │   └── session_context.py      # Async context var for session ID
-│   └── main.py
+│   │   └── session_context.py      # contextvars session ID for async tools
+│   ├── main.py                     # FastAPI app + router registration
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── frontend/
 │   ├── app/
-│   │   ├── upload/                 # Resume drag-drop + Gemini extraction
-│   │   ├── preferences/            # Job preferences + agent config
-│   │   ├── dashboard/              # Live feed + voice + CAPTCHA overlay
-│   │   └── tracker/                # Results table + stats
+│   │   ├── page.tsx                # Landing — GSAP hero, feature cards
+│   │   ├── upload/page.tsx         # Resume drag-drop + extraction animation
+│   │   ├── preferences/page.tsx    # Job prefs + agent preview
+│   │   ├── dashboard/page.tsx      # Live feed + voice + CAPTCHA overlay
+│   │   └── tracker/page.tsx        # Results table + real elapsed time
 │   ├── components/
 │   │   ├── BrowserFeed.tsx         # Live screenshot stream
 │   │   ├── AgentThinking.tsx       # Agent reasoning display
-│   │   └── VoiceCommand.tsx        # WebRTC voice interface
+│   │   ├── VoiceCommand.tsx        # WebRTC push-to-talk
+│   │   └── StatsBar.tsx            # Applied / skipped / time counters
 │   └── lib/
 │       ├── store.ts                # Zustand global state
 │       ├── websocket.ts            # WS manager with auto-reconnect
-│       └── geminiLive.ts           # WebRTC peer connection
+│       └── geminiLive.ts           # WebRTC peer connection to Gemini Live
 ├── deployment/
 │   └── cloudbuild.yaml             # Cloud Build IaC pipeline
 └── docs/
@@ -176,27 +245,36 @@ ResumeApply/
 
 ---
 
-## Workflow
+## API Reference
 
-1. **Upload** — Drop your resume. Gemini extracts name, role, skills, experience as structured JSON.
-2. **Preferences** — Set target role, min salary, job type. Voice or text.
-3. **Execute** — Agent opens LinkedIn, logs in, searches, filters by Easy Apply, evaluates match score.
-4. **Fill & Submit** — Gemini maps your profile to each form field. Agent types and submits.
-5. **Intervene** — CAPTCHA? Dashboard shows an overlay. You resolve it, click Done, agent continues.
-6. **Track** — Every application logged with company, role, match score, and timestamp.
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/resume/upload` | Upload resume, returns session_id + parsed profile |
+| POST | `/api/agent/start` | Start agent with session_id + preferences |
+| POST | `/api/agent/stop` | Cancel running agent task |
+| POST | `/api/agent/pause` | Broadcast pause event to agent |
+| POST | `/api/agent/resume` | Broadcast resume event to agent |
+| GET | `/api/agent/results/{session_id}` | Get all applications for a session |
+| GET | `/api/agent/status/{session_id}` | Check if agent task is running |
+| POST | `/api/session` | Create WebRTC session for Gemini Live voice |
+| POST | `/api/session/{id}/answer` | Submit WebRTC SDP answer |
+| WS | `/ws/{session_id}` | Real-time event stream |
 
 ---
 
-## Google Cloud Services Used
+## Google Cloud Services
 
-- **Cloud Run** — Serverless backend hosting (auto-scales, handles WebSocket connections)
-- **Cloud Build** — Automated CI/CD pipeline (IaC, bonus point)
-- **Google Cloud Storage** — Resume file storage
-- **Gemini 2.0 Flash** — Vision reasoning, form mapping, cover letter generation
-- **Gemini Live API** — Real-time bidirectional voice via WebRTC
+| Service | Usage |
+|---|---|
+| Gemini 2.0 Flash | Vision reasoning, form field mapping, cover letter generation |
+| Gemini Live API | Real-time bidirectional voice via WebRTC |
+| Cloud Run | Serverless backend — auto-scales, handles long-lived WebSocket connections |
+| Cloud Build | Automated CI/CD pipeline (IaC — qualifies for bonus point) |
+| Cloud Storage | Resume file storage |
+| Firebase Hosting | Frontend CDN deployment |
 
 ---
 
 ## License
 
-MIT License. Created by [Bajrangi](https://github.com/LSUDOKO) for the Google Gemini Live Agent Challenge.
+MIT — built by [Bajrangi](https://github.com/LSUDOKO) for the Google Gemini Live Agent Challenge.
