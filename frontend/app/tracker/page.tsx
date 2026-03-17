@@ -11,12 +11,32 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function TrackerPage() {
     const mainRef = useRef<HTMLDivElement>(null);
-    const { sessionId, totalApplied, totalSkipped, elapsedSeconds, applications: storeApps } = useAgentStore();
+    const { sessionId, totalApplied, totalSkipped, elapsedSeconds, applications: storeApps, sessionStartTime } = useAgentStore();
 
     const formatTime = (s: number) => {
         const m = Math.floor(s / 60).toString().padStart(2, '0');
         const sec = (s % 60).toString().padStart(2, '0');
         return `${m}:${sec}`;
+    };
+
+    // Countdown: 8 hours from when the session started (rate limit window)
+    const RATE_LIMIT_SECONDS = 8 * 60 * 60;
+    const [countdown, setCountdown] = useState(RATE_LIMIT_SECONDS);
+
+    useEffect(() => {
+        const base = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
+        const remaining = Math.max(0, RATE_LIMIT_SECONDS - base);
+        setCountdown(remaining);
+        if (remaining === 0) return;
+        const t = setInterval(() => setCountdown(c => Math.max(0, c - 1)), 1000);
+        return () => clearInterval(t);
+    }, [sessionStartTime]);
+
+    const formatCountdown = (s: number) => {
+        const h = Math.floor(s / 3600).toString().padStart(2, '0');
+        const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+        const sec = (s % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${sec}`;
     };
     const [results, setResults] = useState<any[]>(storeApps);
 
@@ -171,7 +191,7 @@ export default function TrackerPage() {
                         <p className="text-white/50 text-sm font-bold tracking-widest uppercase mb-4">Rate limit refresh</p>
                         <div className="flex items-center gap-4">
                             <span className="material-symbols-outlined text-primary text-4xl">schedule</span>
-                            <p className="text-white text-4xl md:text-6xl font-display font-bold tabular-nums">NEXT SESSION IN: 08:00:00</p>
+                            <p className="text-white text-4xl md:text-6xl font-display font-bold tabular-nums">NEXT SESSION IN: {formatCountdown(countdown)}</p>
                         </div>
                     </div>
                     <div className="mt-24 text-white/30 text-xs font-bold tracking-widest uppercase flex flex-wrap justify-center gap-8">

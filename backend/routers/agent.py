@@ -107,11 +107,6 @@ async def resume_agent_endpoint(payload: dict):
 @router.get("/results/{session_id}")
 async def get_results(session_id: str):
     """Returns all applications logged for a session."""
-    from lib.local_db import db
-    session_data = db.get_session(session_id)
-    if not session_data:
-        return {"applications": [], "total_applied": 0, "total_skipped": 0}
-
     from lib.gcp_helper import gcp_helper
     session_data = gcp_helper.get_session(session_id)
     if not session_data:

@@ -1,46 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-import google.generativeai as genai
 import json, os, uuid, re, tempfile, pathlib
-from lib.local_db import db
+from lib.gcp_helper import gcp_helper
+from google.genai import types
+from lib.gemini_helper import get_gemini_model
 
 router = APIRouter()
 
-if "GEMINI_API_KEY" in os.environ:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-
 GCS_BUCKET = os.environ.get("GCS_BUCKET", "")
 PROJECT_ID = os.environ.get("PROJECT_ID", "")
-
-
-def _ensure_bucket(client, bucket_name: str):
-    """Creates the GCS bucket if it doesn't exist."""
-    from google.cloud import storage
-    from google.api_core.exceptions import Conflict
-    bucket = client.bucket(bucket_name)
-    if not bucket.exists():
-        try:
-            bucket = client.create_bucket(bucket_name, project=PROJECT_ID)
-            print(f"Created GCS bucket: {bucket_name}")
-        except Conflict:
-            pass  # created by another process simultaneously
-    return bucket
-
-
-def _upload_to_gcs(filename: str, content: bytes) -> str:
-    """Uploads resume bytes to GCS, returns public gs:// URI. Falls back to local."""
-    if not GCS_BUCKET:
-        return None
-    try:
-        from google.cloud import storage
-        client = storage.Client(project=PROJECT_ID)
-        bucket = _ensure_bucket(client, GCS_BUCKET)
-        blob = bucket.blob(f"resumes/{filename}")
-        blob.upload_from_string(content, content_type="application/octet-stream")
-        return f"gs://{GCS_BUCKET}/resumes/{filename}"
-    except Exception as e:
-        print(f"GCS upload failed, falling back to local: {e}")
-        return None
-
 
 RESUME_PROMPT = """
 Parse this resume and extract the following as JSON only, no markdown:
@@ -61,48 +28,45 @@ Parse this resume and extract the following as JSON only, no markdown:
 }
 """
 
-
 @router.post("/upload")
 async def upload_resume(file: UploadFile = File(...)):
     content = await file.read()
 
-    # 1. Upload to GCS (auto-creates bucket), fall back to local
-    gcs_url = _upload_to_gcs(file.filename, content)
-    if not gcs_url:
-        try:
-            local_path = db.save_resume(file.filename, content)
-            gcs_url = f"file://{local_path}"
-        except Exception as e:
-            gcs_url = "memory-only"
+    # 1. Upload to GCS
+    try:
+        from google.cloud import storage
+        client = storage.Client(project=PROJECT_ID)
+        bucket = client.bucket(GCS_BUCKET)
+        if not bucket.exists():
+            bucket = client.create_bucket(GCS_BUCKET)
+        
+        blob = bucket.blob(f"resumes/{file.filename}")
+        blob.upload_from_string(content, content_type="application/octet-stream")
+        resume_url = f"gs://{GCS_BUCKET}/resumes/{file.filename}"
+    except Exception as e:
+        print(f"GCS upload failed: {e}")
+        resume_url = f"local://{file.filename}"
 
-    # 2. Parse with Gemini — write to temp file for upload
-    with tempfile.NamedTemporaryFile(
-        suffix=pathlib.Path(file.filename).suffix, delete=False
-    ) as tmp:
-        tmp.write(content)
-        tmp_path = tmp.name
-
+    # 2. Parse with Gemini using modern SDK and inline bytes
+    model = get_gemini_model()
     profile = None
     last_error = "Unknown error"
 
-    for model_name in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]:
-        try:
-            model = genai.GenerativeModel(model_name)
-            gemini_file = genai.upload_file(tmp_path)
-            response = model.generate_content([gemini_file, RESUME_PROMPT])
-            match = re.search(r'\{.*\}', response.text, re.DOTALL)
-            profile = json.loads(match.group()) if match else None
-            if profile:
-                print(f"Resume parsed with: {model_name}")
-                break
-        except Exception as e:
-            print(f"Failed with {model_name}: {e}")
-            last_error = str(e)
-
     try:
-        os.unlink(tmp_path)
-    except Exception:
-        pass
+        # Use inline bytes to save specialized quota
+        part = types.Part.from_bytes(
+            data=content,
+            mime_type="application/pdf" if file.filename.lower().endswith(".pdf") else "image/jpeg"
+        )
+        
+        response = model.generate_content([part, RESUME_PROMPT])
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        if match:
+            profile = json.loads(match.group())
+            print(f"Resume parsed successfully")
+    except Exception as e:
+        print(f"Parsing error: {e}")
+        last_error = str(e)
 
     if not profile:
         is_quota = "429" in last_error
@@ -113,13 +77,13 @@ async def upload_resume(file: UploadFile = File(...)):
         )
         raise HTTPException(status_code=429 if is_quota else 500, detail=detail)
 
-    profile["resume_url"] = gcs_url
+    profile["resume_url"] = resume_url
 
-    # 3. Persist session
+    # 3. Persist session to Firestore
     session_id = str(uuid.uuid4())
-    db.save_session(session_id, {
+    gcp_helper.save_session(session_id, {
         "profile": profile,
-        "created_at": session_id,  # uuid as timestamp proxy
+        "created_at": session_id,
         "status": "profile_ready"
     })
 

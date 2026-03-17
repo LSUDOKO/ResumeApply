@@ -12,12 +12,15 @@ import { useRouter } from "next/navigation";
 export default function DashboardPage() {
     const {
         sessionId, agentStatus, setAgentStatus,
-        totalApplied, totalSkipped, setElapsed
+        totalApplied, totalSkipped, setElapsed,
+        agentLogs, addLog, setSessionStartTime
     } = useAgentStore();
     const router = useRouter();
 
     const [isPaused, setIsPaused] = useState(false);
     const [interventionMsg, setInterventionMsg] = useState<string | null>(null);
+    const [interventionInput, setInterventionInput] = useState("");
+    const [showLogs, setShowLogs] = useState(false);
 
     useEffect(() => {
         if (!sessionId) {
@@ -37,9 +40,17 @@ export default function DashboardPage() {
             setIsPaused(true);
             setAgentStatus('paused');
             setInterventionMsg(data.message || 'Agent needs your attention.');
+            setInterventionInput("");
+        });
+
+        // Log every WS event
+        const unsubAll = wsManager.on('*', (data: any) => {
+            const ts = new Date().toLocaleTimeString();
+            addLog(`[${ts}] ${data.type}: ${data.message || data.context || data.error || data.text || ''}`);
         });
 
         // Elapsed time counter
+        setSessionStartTime(Date.now());
         let seconds = 0;
         const timer = setInterval(() => {
             seconds++;
@@ -49,6 +60,7 @@ export default function DashboardPage() {
         return () => {
             unsubComplete();
             unsubPaused();
+            unsubAll();
             clearInterval(timer);
         };
     }, [sessionId]);
@@ -87,31 +99,72 @@ export default function DashboardPage() {
     };
 
     const handleInterventionDone = () => {
-        // Tell backend user resolved the CAPTCHA / intervention
-        wsManager.send({ type: 'intervention_response', status: 'resolved', session_id: sessionId });
+        wsManager.send({
+            type: 'intervention_response',
+            status: 'resolved',
+            session_id: sessionId,
+            value: interventionInput  // sends password / answer back to agent
+        });
         setInterventionMsg(null);
+        setInterventionInput("");
         setIsPaused(false);
         setAgentStatus('running');
+    };
+
+    const handleForceRefresh = () => {
+        // Re-request latest screenshot by asking agent status
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        fetch(`${apiUrl}/api/agent/status/${sessionId}`)
+            .then(r => r.json())
+            .then(d => addLog(`[REFRESH] Agent running: ${d.running}`));
+        // Also re-sync results
+        wsManager.send({ type: 'ping', session_id: sessionId });
     };
 
     return (
         <div className="bg-background-dark min-h-screen pt-24 flex flex-col overflow-hidden text-slate-100 selection:bg-primary selection:text-black">
 
-            {/* CAPTCHA / Intervention Overlay — shown only when needed */}
+            {/* CAPTCHA / Intervention Overlay */}
             {interventionMsg && (
                 <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
                     <div className="bg-background-dark border-4 border-primary p-10 max-w-lg w-full mx-4 shadow-[8px_8px_0px_rgba(255,255,255,0.1)]">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Agent Needs You</p>
                         <h2 className="text-2xl font-black uppercase text-white mb-4">{interventionMsg}</h2>
-                        <p className="text-slate-400 text-sm mb-8">
-                            Resolve the issue in the browser feed on the left, then click Done to resume the agent.
+                        <p className="text-slate-400 text-sm mb-4">
+                            Resolve the issue in the browser feed on the left, or type your response below, then click Done.
                         </p>
+                        <input
+                            type="text"
+                            value={interventionInput}
+                            onChange={e => setInterventionInput(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleInterventionDone()}
+                            placeholder="Type password or answer (if needed)..."
+                            className="w-full bg-black border-2 border-white/20 text-white px-4 py-3 mb-6 text-sm font-mono focus:outline-none focus:border-primary placeholder:text-white/30"
+                        />
                         <button
                             onClick={handleInterventionDone}
                             className="w-full py-4 bg-primary text-black font-black uppercase tracking-widest text-lg hover:brightness-110 transition-all"
                         >
                             DONE — RESUME AGENT
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Agent Logs Modal */}
+            {showLogs && (
+                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={() => setShowLogs(false)}>
+                    <div className="bg-background-dark border-4 border-primary p-6 max-w-2xl w-full mx-4 max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Agent Logs</p>
+                            <button onClick={() => setShowLogs(false)} className="text-white/40 hover:text-white text-xl font-bold">✕</button>
+                        </div>
+                        <div className="overflow-y-auto flex-1 font-mono text-xs text-slate-300 space-y-1">
+                            {agentLogs.length === 0
+                                ? <p className="text-white/30 italic">No logs yet.</p>
+                                : agentLogs.map((log, i) => <p key={i} className="border-b border-white/5 pb-1">{log}</p>)
+                            }
+                        </div>
                     </div>
                 </div>
             )}
@@ -159,13 +212,19 @@ export default function DashboardPage() {
                             <span>Quick Actions</span>
                         </h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-white/5 border border-white/10 rounded group hover:border-primary transition-colors cursor-pointer">
+                            <div
+                                onClick={handleForceRefresh}
+                                className="p-4 bg-white/5 border border-white/10 rounded group hover:border-primary transition-colors cursor-pointer"
+                            >
                                 <p className="text-[10px] font-bold text-slate-500 mb-1">FORCE REFRESH</p>
                                 <p className="text-xs font-mono text-primary">RE-SYNC FEED</p>
                             </div>
-                            <div className="p-4 bg-white/5 border border-white/10 rounded group hover:border-primary transition-colors cursor-pointer">
+                            <div
+                                onClick={() => setShowLogs(true)}
+                                className="p-4 bg-white/5 border border-white/10 rounded group hover:border-primary transition-colors cursor-pointer"
+                            >
                                 <p className="text-[10px] font-bold text-slate-500 mb-1">AGENT LOGS</p>
-                                <p className="text-xs font-mono text-primary">VIEW RAW</p>
+                                <p className="text-xs font-mono text-primary">VIEW RAW ({agentLogs.length})</p>
                             </div>
                         </div>
                     </div>

@@ -46,6 +46,10 @@ interface AgentStore {
     setElapsed: (s: number) => void
     lastVoiceCommand: string
     setLastVoiceCommand: (c: string) => void
+    agentLogs: string[]
+    addLog: (msg: string) => void
+    sessionStartTime: number | null
+    setSessionStartTime: (t: number) => void
 }
 
 export const useAgentStore = create<AgentStore>((set) => ({
@@ -75,4 +79,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
     setElapsed: (s) => set({ elapsedSeconds: s }),
     lastVoiceCommand: '',
     setLastVoiceCommand: (c) => set({ lastVoiceCommand: c }),
+    agentLogs: [],
+    addLog: (msg) => set((s) => ({ agentLogs: [msg, ...s.agentLogs].slice(0, 200) })),
+    sessionStartTime: null,
+    setSessionStartTime: (t) => set({ sessionStartTime: t }),
 }))
