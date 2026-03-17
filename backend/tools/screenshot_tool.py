@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google.genai import types
 import base64, io, os
 from playwright.async_api import async_playwright
 import PIL.Image
@@ -70,11 +70,14 @@ async def take_screenshot_tool(action_context: str) -> dict:
 
     # Analyze with Gemini Vision
     model = get_gemini_model()
-    img = PIL.Image.open(io.BytesIO(screenshot_bytes))
+    
+    # Use types.Part for the modern SDK
+    img_part = types.Part.from_bytes(
+        data=screenshot_bytes,
+        mime_type="image/jpeg"
+    )
 
-    response = model.generate_content([
-        img,
-        f"""Analyze this browser screenshot. Context: {action_context}.
+    prompt = f"""Analyze this browser screenshot. Context: {action_context}.
         Return JSON only (no markdown) with:
         {{
           "visible_jobs": [{{"title": "", "company": "", "location": "", "easy_apply": true/false}}],
@@ -84,7 +87,8 @@ async def take_screenshot_tool(action_context: str) -> dict:
           "captcha_detected": false,
           "page_summary": ""
         }}"""
-    ])
+
+    response = model.generate_content([img_part, prompt])
 
     import json, re
     json_match = re.search(r'\{.*\}', response.text, re.DOTALL)

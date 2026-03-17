@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google.genai import types
 import json, re
 from lib.gemini_helper import get_gemini_model
 from lib.session_context import current_session_id
@@ -91,12 +91,12 @@ async def mark_job_applied_tool(job_title: str, company: str, match_score: int) 
                 "timestamp": datetime.datetime.utcnow().isoformat()
             }
 
-            # Persist to local DB
-            session_data = db.get_session(session_id) or {}
+            # Persist to Firestore
+            session_data = gcp_helper.get_session(session_id) or {}
             apps = session_data.get("applications", [])
             apps.append(application)
             session_data["applications"] = apps
-            db.save_session(session_id, session_data)
+            gcp_helper.save_session(session_id, session_data)
 
             await manager.broadcast(session_id, {
                 "type": "job_applied",
@@ -125,11 +125,12 @@ async def mark_job_skipped_tool(job_title: str, company: str, reason: str) -> di
                 "timestamp": datetime.datetime.utcnow().isoformat()
             }
 
-            session_data = db.get_session(session_id) or {}
+            # Persist to Firestore
+            session_data = gcp_helper.get_session(session_id) or {}
             apps = session_data.get("applications", [])
             apps.append(application)
             session_data["applications"] = apps
-            db.save_session(session_id, session_data)
+            gcp_helper.save_session(session_id, session_data)
 
             await manager.broadcast(session_id, {
                 "type": "job_skipped",

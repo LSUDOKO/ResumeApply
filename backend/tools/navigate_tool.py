@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google.genai import types
 import PIL.Image, io, json, re
 from lib.gemini_helper import get_gemini_model
 from lib.session_context import current_session_id
@@ -35,8 +35,10 @@ async def navigate_tool(
         screenshot_bytes = await page.screenshot(type="jpeg", quality=80)
         img = PIL.Image.open(io.BytesIO(screenshot_bytes))
         model = get_gemini_model()
+        img_part = types.Part.from_bytes(data=screenshot_bytes, mime_type="image/jpeg")
+        
         response = model.generate_content([
-            img,
+            img_part,
             f"""Find the UI element matching: '{selector_description}'.
             Return JSON only: {{"x": number, "y": number, "found": true/false, "confidence": "high/medium/low"}}"""
         ])
@@ -60,8 +62,10 @@ async def navigate_tool(
         screenshot_bytes = await page.screenshot(type="jpeg", quality=80)
         img = PIL.Image.open(io.BytesIO(screenshot_bytes))
         model = get_gemini_model()
+        img_part = types.Part.from_bytes(data=screenshot_bytes, mime_type="image/jpeg")
+        
         response = model.generate_content([
-            img,
+            img_part,
             f"Find input field labeled '{selector_description}'. Return JSON only: {{\"x\": number, \"y\": number, \"found\": true/false}}"
         ])
         json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
