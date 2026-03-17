@@ -36,7 +36,7 @@ No DOM scraping. No brittle CSS selectors. Pure multimodal visual understanding.
 
 ## Architecture
 
-![Architecture Diagram](docs/architecture.svg)
+![Architecture Diagram](https://github.com/user-attachments/assets/97f648ee-5488-4fc7-a527-1bc64ff482bf)
 
 ---
 
