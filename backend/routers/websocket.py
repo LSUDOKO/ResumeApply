@@ -7,6 +7,23 @@ router = APIRouter()
 # Intervention futures: session_id -> asyncio.Future
 _intervention_futures: Dict[str, asyncio.Future] = {}
 
+# Pause events: set = running, cleared = paused. Agent awaits these before each tool action.
+_pause_events: Dict[str, asyncio.Event] = {}
+
+
+def get_pause_event(session_id: str) -> asyncio.Event:
+    """Returns (creating if needed) the pause Event for a session."""
+    if session_id not in _pause_events:
+        e = asyncio.Event()
+        e.set()  # default: running
+        _pause_events[session_id] = e
+    return _pause_events[session_id]
+
+
+def cleanup_session(session_id: str):
+    _pause_events.pop(session_id, None)
+    _intervention_futures.pop(session_id, None)
+
 
 class ConnectionManager:
     def __init__(self):
@@ -36,6 +53,10 @@ class ConnectionManager:
                 dead.append(ws)
         for ws in dead:
             self.disconnect(session_id, ws)
+
+    async def wait_for_resume(self, session_id: str):
+        """Suspends the caller until the session is unpaused."""
+        await get_pause_event(session_id).wait()
 
     async def wait_for_intervention(self, session_id: str, timeout: float = 300.0) -> dict:
         """
@@ -71,6 +92,12 @@ async def websocket_endpoint(ws: WebSocket, session_id: str):
                 future = _intervention_futures.get(session_id)
                 if future and not future.done():
                     future.set_result(message)
+
+            # Pause / resume from frontend
+            elif msg_type == "pause":
+                get_pause_event(session_id).clear()
+            elif msg_type == "resume":
+                get_pause_event(session_id).set()
 
             # User sends a voice command mid-session
             elif msg_type == "voice_command":

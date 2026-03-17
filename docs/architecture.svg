@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" font-family="monospace" font-size="13">
+  <rect width="1100" height="700" fill="#0f0f0f"/>
+
+  <!-- Title -->
+  <text x="550" y="40" text-anchor="middle" fill="#c8ff00" font-size="20" font-weight="bold" letter-spacing="4">RESUMEAPPLY — SYSTEM ARCHITECTURE</text>
+
+  <!-- ═══════════════ FRONTEND BOX ═══════════════ -->
+  <rect x="30" y="70" width="300" height="380" rx="4" fill="none" stroke="#c8ff00" stroke-width="2"/>
+  <rect x="30" y="70" width="300" height="28" rx="4" fill="#c8ff00"/>
+  <text x="180" y="89" text-anchor="middle" fill="#0f0f0f" font-weight="bold" letter-spacing="2">FRONTEND — Next.js 14</text>
+
+  <rect x="50" y="112" width="260" height="44" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="180" y="130" text-anchor="middle" fill="#c8ff00" font-weight="bold">/upload</text>
+  <text x="180" y="148" text-anchor="middle" fill="#888" font-size="11">Resume drag-drop + Gemini parse</text>
+
+  <rect x="50" y="166" width="260" height="44" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="180" y="184" text-anchor="middle" fill="#c8ff00" font-weight="bold">/preferences</text>
+  <text x="180" y="202" text-anchor="middle" fill="#888" font-size="11">Job prefs + voice command setup</text>
+
+  <rect x="50" y="220" width="260" height="44" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="180" y="238" text-anchor="middle" fill="#c8ff00" font-weight="bold">/dashboard</text>
+  <text x="180" y="256" text-anchor="middle" fill="#888" font-size="11">Live feed · Voice · CAPTCHA overlay</text>
+
+  <rect x="50" y="274" width="260" height="44" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="180" y="292" text-anchor="middle" fill="#c8ff00" font-weight="bold">/tracker</text>
+  <text x="180" y="310" text-anchor="middle" fill="#888" font-size="11">Results table · Stats · Elapsed time</text>
+
+  <rect x="50" y="328" width="120" height="36" rx="3" fill="#1a1a1a" stroke="#555" stroke-width="1"/>
+  <text x="110" y="342" text-anchor="middle" fill="#aaa" font-size="11">Zustand Store</text>
+  <text x="110" y="356" text-anchor="middle" fill="#666" font-size="10">Global state</text>
+
+  <rect x="190" y="328" width="120" height="36" rx="3" fill="#1a1a1a" stroke="#555" stroke-width="1"/>
+  <text x="250" y="342" text-anchor="middle" fill="#aaa" font-size="11">WS Manager</text>
+  <text x="250" y="356" text-anchor="middle" fill="#666" font-size="10">Auto-reconnect</text>
+
+  <rect x="50" y="374" width="260" height="36" rx="3" fill="#1a1a1a" stroke="#4a9eff" stroke-width="1"/>
+  <text x="180" y="388" text-anchor="middle" fill="#4a9eff" font-size="11">GeminiLiveClient (WebRTC)</text>
+  <text x="180" y="402" text-anchor="middle" fill="#666" font-size="10">Bidirectional voice · Data channel</text>
+
+  <!-- ═══════════════ BACKEND BOX ═══════════════ -->
+  <rect x="400" y="70" width="320" height="440" rx="4" fill="none" stroke="#c8ff00" stroke-width="2"/>
+  <rect x="400" y="70" width="320" height="28" rx="4" fill="#c8ff00"/>
+  <text x="560" y="89" text-anchor="middle" fill="#0f0f0f" font-weight="bold" letter-spacing="2">BACKEND — FastAPI · Cloud Run</text>
+
+  <rect x="420" y="112" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="560" y="126" text-anchor="middle" fill="#c8ff00" font-weight="bold">POST /api/resume/upload</text>
+  <text x="560" y="140" text-anchor="middle" fill="#888" font-size="11">Gemini parses PDF/DOCX → JSON profile</text>
+
+  <rect x="420" y="158" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="560" y="172" text-anchor="middle" fill="#c8ff00" font-weight="bold">POST /api/agent/start · stop · pause</text>
+  <text x="560" y="186" text-anchor="middle" fill="#888" font-size="11">Async task lifecycle management</text>
+
+  <rect x="420" y="204" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="560" y="218" text-anchor="middle" fill="#c8ff00" font-weight="bold">GET /api/agent/results/{session_id}</text>
+  <text x="560" y="232" text-anchor="middle" fill="#888" font-size="11">Returns persisted applications</text>
+
+  <rect x="420" y="250" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#4a9eff" stroke-width="1"/>
+  <text x="560" y="264" text-anchor="middle" fill="#4a9eff" font-weight="bold">WS /ws/{session_id}</text>
+  <text x="560" y="278" text-anchor="middle" fill="#888" font-size="11">Screenshots · Events · Intervention</text>
+
+  <rect x="420" y="296" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#4a9eff" stroke-width="1"/>
+  <text x="560" y="310" text-anchor="middle" fill="#4a9eff" font-weight="bold">POST /api/session · /api/session/{id}/answer</text>
+  <text x="560" y="324" text-anchor="middle" fill="#888" font-size="11">WebRTC SDP offer/answer exchange</text>
+
+  <!-- ADK Agent -->
+  <rect x="420" y="346" width="280" height="54" rx="3" fill="#1f1f00" stroke="#c8ff00" stroke-width="1.5"/>
+  <text x="560" y="364" text-anchor="middle" fill="#c8ff00" font-weight="bold">ADK Agent — ResumeApplyAgent</text>
+  <text x="560" y="380" text-anchor="middle" fill="#888" font-size="11">screenshot · navigate · form_fill</text>
+  <text x="560" y="394" text-anchor="middle" fill="#888" font-size="11">mark_applied · mark_skipped · cover_letter</text>
+
+  <!-- Playwright -->
+  <rect x="420" y="412" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="560" y="426" text-anchor="middle" fill="#ff6b6b" font-weight="bold">Playwright (per-session browser)</text>
+  <text x="560" y="440" text-anchor="middle" fill="#888" font-size="11">Stealth mode · Visual coord clicks</text>
+
+  <!-- Local DB -->
+  <rect x="420" y="458" width="280" height="36" rx="3" fill="#1a1a1a" stroke="#555" stroke-width="1"/>
+  <text x="560" y="472" text-anchor="middle" fill="#aaa" font-weight="bold">Local JSON DB</text>
+  <text x="560" y="486" text-anchor="middle" fill="#666" font-size="11">Sessions · Applications · Profiles</text>
+
+  <!-- ═══════════════ GOOGLE CLOUD BOX ═══════════════ -->
+  <rect x="790" y="70" width="280" height="380" rx="4" fill="none" stroke="#4a9eff" stroke-width="2"/>
+  <rect x="790" y="70" width="280" height="28" rx="4" fill="#4a9eff"/>
+  <text x="930" y="89" text-anchor="middle" fill="#fff" font-weight="bold" letter-spacing="2">GOOGLE CLOUD</text>
+
+  <rect x="810" y="112" width="240" height="54" rx="3" fill="#0a1628" stroke="#4a9eff" stroke-width="1"/>
+  <text x="930" y="130" text-anchor="middle" fill="#4a9eff" font-weight="bold">Gemini 2.0 Flash</text>
+  <text x="930" y="146" text-anchor="middle" fill="#888" font-size="11">Vision · Text · JSON mode</text>
+  <text x="930" y="160" text-anchor="middle" fill="#888" font-size="11">Model fallback chain</text>
+
+  <rect x="810" y="176" width="240" height="44" rx="3" fill="#0a1628" stroke="#4a9eff" stroke-width="1"/>
+  <text x="930" y="194" text-anchor="middle" fill="#4a9eff" font-weight="bold">Gemini Live API</text>
+  <text x="930" y="210" text-anchor="middle" fill="#888" font-size="11">Real-time voice · WebRTC</text>
+
+  <rect x="810" y="230" width="240" height="44" rx="3" fill="#0a1628" stroke="#4a9eff" stroke-width="1"/>
+  <text x="930" y="248" text-anchor="middle" fill="#4a9eff" font-weight="bold">Cloud Run</text>
+  <text x="930" y="264" text-anchor="middle" fill="#888" font-size="11">Backend · 2CPU 2GB · Auto-scale</text>
+
+  <rect x="810" y="284" width="240" height="44" rx="3" fill="#0a1628" stroke="#4a9eff" stroke-width="1"/>
+  <text x="930" y="302" text-anchor="middle" fill="#4a9eff" font-weight="bold">Cloud Storage (GCS)</text>
+  <text x="930" y="318" text-anchor="middle" fill="#888" font-size="11">Resume file storage</text>
+
+  <rect x="810" y="338" width="240" height="44" rx="3" fill="#0a1628" stroke="#4a9eff" stroke-width="1"/>
+  <text x="930" y="356" text-anchor="middle" fill="#4a9eff" font-weight="bold">Cloud Build</text>
+  <text x="930" y="372" text-anchor="middle" fill="#888" font-size="11">CI/CD · IaC pipeline</text>
+
+  <rect x="810" y="392" width="240" height="44" rx="3" fill="#0a1628" stroke="#4a9eff" stroke-width="1"/>
+  <text x="930" y="410" text-anchor="middle" fill="#4a9eff" font-weight="bold">Firebase Hosting</text>
+  <text x="930" y="426" text-anchor="middle" fill="#888" font-size="11">Frontend CDN deployment</text>
+
+  <!-- ═══════════════ ARROWS ═══════════════ -->
+
+  <!-- Frontend → Backend: REST -->
+  <line x1="330" y1="200" x2="400" y2="200" stroke="#c8ff00" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <polygon points="397,196 407,200 397,204" fill="#c8ff00"/>
+  <text x="365" y="193" text-anchor="middle" fill="#c8ff00" font-size="10">REST</text>
+
+  <!-- Frontend ↔ Backend: WebSocket -->
+  <line x1="330" y1="270" x2="400" y2="270" stroke="#4a9eff" stroke-width="1.5"/>
+  <polygon points="397,266 407,270 397,274" fill="#4a9eff"/>
+  <polygon points="333,266 323,270 333,274" fill="#4a9eff"/>
+  <text x="365" y="263" text-anchor="middle" fill="#4a9eff" font-size="10">WebSocket</text>
+
+  <!-- Frontend ↔ GCloud: WebRTC -->
+  <line x1="330" y1="392" x2="790" y2="194" stroke="#4a9eff" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <polygon points="787,190 797,194 787,198" fill="#4a9eff"/>
+  <text x="560" y="280" text-anchor="middle" fill="#4a9eff" font-size="10">WebRTC (voice)</text>
+
+  <!-- Backend → GCloud: Gemini API -->
+  <line x1="720" y1="200" x2="790" y2="140" stroke="#c8ff00" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <polygon points="787,136 797,140 787,144" fill="#c8ff00"/>
+  <text x="762" y="165" text-anchor="middle" fill="#c8ff00" font-size="10">Gemini API</text>
+
+  <!-- Backend → GCloud: GCS -->
+  <line x1="720" y1="310" x2="790" y2="306" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <polygon points="787,302 797,306 787,310" fill="#aaa"/>
+
+  <!-- ═══════════════ FLOW LEGEND ═══════════════ -->
+  <rect x="30" y="490" width="740" height="180" rx="4" fill="none" stroke="#333" stroke-width="1"/>
+  <text x="400" y="512" text-anchor="middle" fill="#555" font-size="11" font-weight="bold" letter-spacing="3">USER FLOW</text>
+
+  <!-- Step boxes -->
+  <rect x="50" y="524" width="110" height="50" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="105" y="542" text-anchor="middle" fill="#c8ff00" font-size="11" font-weight="bold">1. UPLOAD</text>
+  <text x="105" y="558" text-anchor="middle" fill="#666" font-size="10">PDF → Gemini</text>
+  <text x="105" y="570" text-anchor="middle" fill="#666" font-size="10">→ JSON profile</text>
+
+  <rect x="180" y="524" width="110" height="50" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="235" y="542" text-anchor="middle" fill="#c8ff00" font-size="11" font-weight="bold">2. PREFS</text>
+  <text x="235" y="558" text-anchor="middle" fill="#666" font-size="10">Role · Salary</text>
+  <text x="235" y="570" text-anchor="middle" fill="#666" font-size="10">Voice / Text</text>
+
+  <rect x="310" y="524" width="110" height="50" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="365" y="542" text-anchor="middle" fill="#c8ff00" font-size="11" font-weight="bold">3. EXECUTE</text>
+  <text x="365" y="558" text-anchor="middle" fill="#666" font-size="10">Agent browses</text>
+  <text x="365" y="570" text-anchor="middle" fill="#666" font-size="10">LinkedIn/Indeed</text>
+
+  <rect x="440" y="524" width="110" height="50" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="495" y="542" text-anchor="middle" fill="#c8ff00" font-size="11" font-weight="bold">4. FILL</text>
+  <text x="495" y="558" text-anchor="middle" fill="#666" font-size="10">Vision → coords</text>
+  <text x="495" y="570" text-anchor="middle" fill="#666" font-size="10">→ type + submit</text>
+
+  <rect x="570" y="524" width="110" height="50" rx="3" fill="#1a1a1a" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="625" y="542" text-anchor="middle" fill="#ff6b6b" font-size="11" font-weight="bold">5. INTERVENE</text>
+  <text x="625" y="558" text-anchor="middle" fill="#666" font-size="10">CAPTCHA pause</text>
+  <text x="625" y="570" text-anchor="middle" fill="#666" font-size="10">→ user resolves</text>
+
+  <rect x="700" y="524" width="50" height="50" rx="3" fill="#1a1a1a" stroke="#c8ff00" stroke-width="1"/>
+  <text x="725" y="542" text-anchor="middle" fill="#c8ff00" font-size="11" font-weight="bold">6.</text>
+  <text x="725" y="558" text-anchor="middle" fill="#666" font-size="10">TRACK</text>
+  <text x="725" y="570" text-anchor="middle" fill="#666" font-size="10">Results</text>
+
+  <!-- Flow arrows between steps -->
+  <line x1="160" y1="549" x2="178" y2="549" stroke="#c8ff00" stroke-width="1"/>
+  <polygon points="175,545 185,549 175,553" fill="#c8ff00"/>
+  <line x1="290" y1="549" x2="308" y2="549" stroke="#c8ff00" stroke-width="1"/>
+  <polygon points="305,545 315,549 305,553" fill="#c8ff00"/>
+  <line x1="420" y1="549" x2="438" y2="549" stroke="#c8ff00" stroke-width="1"/>
+  <polygon points="435,545 445,549 435,553" fill="#c8ff00"/>
+  <line x1="550" y1="549" x2="568" y2="549" stroke="#c8ff00" stroke-width="1"/>
+  <polygon points="565,545 575,549 565,553" fill="#c8ff00"/>
+  <line x1="680" y1="549" x2="698" y2="549" stroke="#c8ff00" stroke-width="1"/>
+  <polygon points="695,545 705,549 695,553" fill="#c8ff00"/>
+
+  <!-- Legend -->
+  <line x1="50" y1="648" x2="80" y2="648" stroke="#c8ff00" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="88" y="652" fill="#888" font-size="11">REST API</text>
+  <line x1="160" y1="648" x2="190" y2="648" stroke="#4a9eff" stroke-width="1.5"/>
+  <text x="198" y="652" fill="#888" font-size="11">WebSocket</text>
+  <line x1="280" y1="648" x2="310" y2="648" stroke="#4a9eff" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="318" y="652" fill="#888" font-size="11">WebRTC (voice)</text>
+</svg>

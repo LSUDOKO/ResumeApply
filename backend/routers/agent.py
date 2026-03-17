@@ -58,12 +58,14 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
                 "error": str(e)
             })
         finally:
-            # Clean up browser for this session
+            # Clean up browser and pause event for this session
             try:
                 from tools.screenshot_tool import close_browser
                 await close_browser(session_id)
             except Exception:
                 pass
+            from routers.websocket import cleanup_session
+            cleanup_session(session_id)
 
     task = asyncio.create_task(run_agent())
     _running_sessions[session_id] = task
@@ -76,14 +78,16 @@ async def stop_agent(payload: dict):
     if session_id in _running_sessions:
         _running_sessions[session_id].cancel()
         del _running_sessions[session_id]
+    from routers.websocket import cleanup_session
+    cleanup_session(session_id)
     return {"status": "stopped"}
 
 
 @router.post("/pause")
 async def pause_agent(payload: dict):
-    """Pause is handled via WebSocket message — this just broadcasts the pause event."""
     session_id = payload["session_id"]
-    from routers.websocket import manager
+    from routers.websocket import manager, get_pause_event
+    get_pause_event(session_id).clear()  # suspends the agent at next tool boundary
     await manager.broadcast(session_id, {
         "type": "agent_paused",
         "message": payload.get("message", "Agent paused by user.")
@@ -94,7 +98,8 @@ async def pause_agent(payload: dict):
 @router.post("/resume")
 async def resume_agent_endpoint(payload: dict):
     session_id = payload["session_id"]
-    from routers.websocket import manager
+    from routers.websocket import manager, get_pause_event
+    get_pause_event(session_id).set()  # unblocks the agent immediately
     await manager.broadcast(session_id, {
         "type": "agent_resumed",
         "message": "Agent resuming..."

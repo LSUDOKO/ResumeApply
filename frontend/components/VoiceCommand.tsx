@@ -16,7 +16,11 @@ export function VoiceCommand() {
                 setTranscript(text)
                 setLastVoiceCommand(text)
             },
-            onAgentSpeech: () => { }
+            onAgentSpeech: (blob) => {
+                const url = URL.createObjectURL(blob)
+                const audio = new Audio(url)
+                audio.play()
+            }
         })
 
         const systemPrompt = "You are the voice interface for ResumeApply. Confirm job search commands."

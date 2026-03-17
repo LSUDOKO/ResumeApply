@@ -66,21 +66,21 @@ export default function DashboardPage() {
     const handlePause = async () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         if (isPaused) {
-            // Resume
             await fetch(`${apiUrl}/api/agent/resume`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ session_id: sessionId })
             });
+            wsManager.send({ type: 'resume', session_id: sessionId });
             setIsPaused(false);
             setAgentStatus('running');
         } else {
-            // Pause
             await fetch(`${apiUrl}/api/agent/pause`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ session_id: sessionId, message: 'Paused by user.' })
             });
+            wsManager.send({ type: 'pause', session_id: sessionId });
             setIsPaused(true);
             setAgentStatus('paused');
         }

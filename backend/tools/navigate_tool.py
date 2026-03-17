@@ -14,6 +14,9 @@ async def navigate_tool(
     Controls browser navigation and interaction using visual descriptions.
     Actions: navigate, click, type, scroll, press_enter, get_text
     """
+    from lib.session_context import check_pause
+    await check_pause()
+
     from tools.screenshot_tool import get_browser
     session_id = current_session_id.get() or "default"
     _, page = await get_browser(session_id)

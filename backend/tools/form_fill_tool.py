@@ -9,6 +9,9 @@ async def form_fill_tool(form_fields: list, resume_profile: dict) -> dict:
     Maps form fields to resume data using Gemini, then actually fills them
     in the browser using navigate_tool.
     """
+    from lib.session_context import check_pause
+    await check_pause()
+
     from tools.navigate_tool import navigate_tool
 
     model = get_gemini_model()

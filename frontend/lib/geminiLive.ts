@@ -1,6 +1,7 @@
 export class GeminiLiveClient {
-    private pc: RTCPeerConnection | null = null
-    private dc: RTCDataChannel | null = null
+    private ws: WebSocket | null = null
+    private audioContext: AudioContext | null = null
+    private processor: ScriptProcessorNode | null = null
     private mediaStream: MediaStream | null = null
     private onTranscript: (text: string) => void
     private onAgentSpeech: (audioBlob: Blob) => void
@@ -14,61 +15,64 @@ export class GeminiLiveClient {
     }
 
     async startVoiceSession(systemPrompt: string) {
-        this.mediaStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                sampleRate: 16000
-            }
-        })
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        const host = process.env.NEXT_PUBLIC_API_URL?.replace(/^https?:\/\//, '') || window.location.host
+        const sessionId = Math.random().toString(36).substring(7)
+        
+        this.ws = new WebSocket(`${protocol}//${host}/api/ws/voice/${sessionId}`)
+        this.ws.binaryType = 'arraybuffer'
 
-        const response = await fetch('/api/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ system_prompt: systemPrompt })
-        })
-
-        const { offer, sessionId } = await response.json()
-
-        this.pc = new RTCPeerConnection()
-
-        this.mediaStream.getTracks().forEach(track => {
-            this.pc!.addTrack(track, this.mediaStream!)
-        })
-
-        this.dc = this.pc.createDataChannel('events')
-        this.dc.onmessage = (event) => {
-            const data = JSON.parse(event.data)
-            if (data.type === 'transcript') {
-                this.onTranscript(data.text)
+        this.ws.onmessage = (event) => {
+            if (typeof event.data === 'string') {
+                const data = JSON.parse(event.data)
+                if (data.type === 'transcript') {
+                    this.onTranscript(data.text)
+                }
+            } else {
+                // Audio response from agent (MP3 or PCM)
+                const audioBlob = new Blob([event.data], { type: 'audio/mp3' })
+                this.onAgentSpeech(audioBlob)
             }
         }
 
-        this.pc.ontrack = (event) => {
-            const audio = new Audio()
-            audio.srcObject = event.streams[0]
-            audio.play()
+        this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        this.audioContext = new AudioContext({ sampleRate: 16000 })
+        const source = this.audioContext.createMediaStreamSource(this.mediaStream)
+        
+        // Use ScriptProcessor for simple PCM16 chunking
+        this.processor = this.audioContext.createScriptProcessor(4096, 1, 1)
+        source.connect(this.processor)
+        this.processor.connect(this.audioContext.destination)
+
+        this.processor.onaudioprocess = (e) => {
+            if (this.ws?.readyState === WebSocket.OPEN) {
+                const inputData = e.inputBuffer.getChannelData(0)
+                const pcm16 = this.floatTo16BitPCM(inputData)
+                this.ws.send(pcm16)
+            }
         }
+    }
 
-        await this.pc.setRemoteDescription(offer)
-        const answer = await this.pc.createAnswer()
-        await this.pc.setLocalDescription(answer)
-
-        await fetch(`/api/session/${sessionId}/answer`, {
-            method: 'POST',
-            body: JSON.stringify({ answer })
-        })
+    private floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
+        const buffer = new ArrayBuffer(float32Array.length * 2)
+        const view = new DataView(buffer)
+        for (let i = 0; i < float32Array.length; i++) {
+            const s = Math.max(-1, Math.min(1, float32Array[i]))
+            view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
+        }
+        return buffer
     }
 
     sendTextToAgent(text: string) {
-        if (this.dc?.readyState === 'open') {
-            this.dc.send(JSON.stringify({ type: 'user_text', text }))
+        if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type: 'user_text', text }))
         }
     }
 
     async stop() {
         this.mediaStream?.getTracks().forEach(t => t.stop())
-        this.dc?.close()
-        this.pc?.close()
+        this.processor?.disconnect()
+        this.audioContext?.close()
+        this.ws?.close()
     }
 }

@@ -47,6 +47,9 @@ async def take_screenshot_tool(action_context: str) -> dict:
     sends it to the frontend via WebSocket, and returns
     a Gemini Vision analysis of what's visible.
     """
+    from lib.session_context import check_pause
+    await check_pause()
+
     session_id = current_session_id.get() or "default"
     _, page = await get_browser(session_id)
 
