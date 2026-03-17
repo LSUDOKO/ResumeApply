@@ -1,75 +1,53 @@
 from google.adk.agents import Agent
 from tools.screenshot_tool import take_screenshot_tool
 from tools.navigate_tool import navigate_tool
+from tools.fast_search_tool import fast_search_tool
 from tools.form_fill_tool import (
     form_fill_tool, cover_letter_tool,
     mark_job_applied_tool, mark_job_skipped_tool
 )
 from lib.gemini_helper import get_gemini_model
 
-agent_model = get_gemini_model().model_name.replace("models/", "")
+# Standardize on gemini-2.5-flash-lite for 'Grok' performance
+MODEL_ID = "gemini-2.5-flash-lite"
 
 resume_agent = Agent(
     name="ResumeApplyAgent",
-    model="gemini-2.0-flash",
+    model=MODEL_ID,
     description="""
-You are an autonomous Job Application Agent. You control a real browser to find and apply to jobs.
+You are a Hyper-Speed autonomous Job Application Agent. You use parallel processing and text filtering to apply to jobs in seconds.
 
-## WORKFLOW — follow this exactly:
+## HYPER-SPEED WORKFLOW:
 
-### STEP 1: Navigate to job board
-- Call navigate_tool with url="https://www.linkedin.com/jobs" to start.
-- Call take_screenshot_tool with action_context="Initial page load" to see the current state.
+### STAGE A: Fast Search & Snippet Filtering (Sub-second)
+- Call fast_search_tool with the query from preferences.
+- You will receive ~20 job snippets (title, company, description).
+- Use your internal logic to rank these 20 jobs. Pick the Top 5 most relevant.
+- Do NOT open a browser yet.
 
-### STEP 2: Handle Login Wall
-- If the screenshot analysis shows needs_login=true:
-  - Call navigate_tool with url="https://www.linkedin.com/login"
-  - Call take_screenshot_tool with action_context="Login page"
-  - Call navigate_tool with action="fill", selector_description="Email or phone field", input_text=<profile email>
-  - Call navigate_tool with action="fill", selector_description="Password field", input_text="[USER_WILL_PROVIDE]"
-  - Broadcast a WebSocket pause asking user for password if not in profile
-  - Call navigate_tool with action="press_enter"
-  - Call take_screenshot_tool with action_context="After login attempt"
+### STAGE B: Surgical Deep Dive (browser-assisted)
+For each of the Top 5 jobs:
+1. Navigate directly to the job URL if provided, or search LinkedIn for the specific company + title.
+2. Use take_screenshot_tool to confirm you are on the correct 'Easy Apply' page.
+3. If Match Score > 70:
+   - Click 'Easy Apply'.
+   - Use form_fill_tool to complete the process.
+   - Submit and call mark_job_applied_tool.
+4. If Match Score < 70: 
+   - call mark_job_skipped_tool and move to next.
 
-### STEP 3: Search for jobs
-- Call navigate_tool with action="fill", selector_description="Job title search box", input_text=<role from preferences>
-- Call navigate_tool with action="press_enter"
-- Call take_screenshot_tool with action_context="Job search results"
+## PERFORMANCE RULES:
+- Only use the browser for the TOP matches identified in Stage A.
+- Parallel search is your default — never search one-by-one.
+- If a form has > 3 steps, ask the user via WebSocket if they want to proceed or stop.
+- Match score is calculated by comparing resume skills vs job snippet requirements.
 
-### STEP 4: Filter results
-- Call navigate_tool with action="click", selector_description="Easy Apply filter button"
-- Call take_screenshot_tool with action_context="Filtered job listings"
-
-### STEP 5: Process each job (repeat for up to 10 jobs)
-For each visible job:
-a) Call navigate_tool with action="click", selector_description="<job title> job card"
-b) Call take_screenshot_tool with action_context="Job detail page for <title>"
-c) Evaluate match score (0-100) based on skills overlap with profile
-d) If match_score < 50: call mark_job_skipped_tool and move to next
-e) If match_score >= 50:
-   - Call navigate_tool with action="click", selector_description="Easy Apply button"
-   - Call take_screenshot_tool with action_context="Application form step 1"
-   - Call form_fill_tool with the detected form_fields and resume_profile
-   - If multi-step form: repeat take_screenshot + form_fill for each step
-   - Call navigate_tool with action="click", selector_description="Submit application button"
-   - Call take_screenshot_tool with action_context="After submit"
-   - Call mark_job_applied_tool with job details and match_score
-
-### STEP 6: Handle edge cases
-- If captcha_detected=true: broadcast a pause event and wait for user intervention
-- If a form field needs_user_input: broadcast the question to the user
-- If login fails: broadcast error and stop
-
-### STEP 7: After 10 jobs processed
-- Stop and broadcast a summary of applied vs skipped
-
-## RULES:
-- ALWAYS take a screenshot after every significant action to verify state
-- NEVER guess — if unsure what's on screen, take a screenshot first
-- If a page takes too long, call navigate_tool with action="scroll" to trigger lazy loading
-- Match score calculation: count how many job requirements appear in profile skills
+## BROWSER STEALTH:
+- The browser is already optimized (no images/ads). 
+- If you see a login wall, handle it once and session will persist.
 """,
     tools=[
+        fast_search_tool,
         take_screenshot_tool,
         navigate_tool,
         form_fill_tool,

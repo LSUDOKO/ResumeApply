@@ -91,14 +91,25 @@ async def voice_session(websocket: WebSocket, session_id: str):
     try:
         while True:
             message = await websocket.receive()
+            
+            # Explicitly handle disconnect message type to avoid RuntimeError
+            if message["type"] == "websocket.disconnect":
+                print(f"Voice session disconnected: {session_id}")
+                break
+
             if "bytes" in message:
                 sync_queue.put(message["bytes"])
             elif "text" in message:
-                data = json.loads(message["text"])
-                if data.get("type") == "stop":
-                    break
-    except WebSocketDisconnect:
-        print(f"Voice session disconnected: {session_id}")
+                try:
+                    data = json.loads(message["text"])
+                    if data.get("type") == "stop":
+                        break
+                except json.JSONDecodeError:
+                    continue
+    except Exception as e:
+        # Ignore normal disconnects that might still raise errors
+        if not str(e).startswith("Cannot call"):
+            print(f"WebSocket session error: {e}")
     finally:
         sync_queue.put(None)  # signal STT generator to stop
         sender.cancel()

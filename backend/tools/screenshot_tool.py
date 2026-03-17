@@ -1,7 +1,7 @@
 from google.genai import types
 import base64, io, os
 from playwright.async_api import async_playwright
-import PIL.Image
+import PIL.Image, re
 from lib.gemini_helper import get_gemini_model
 from lib.session_context import current_session_id
 
@@ -26,8 +26,26 @@ async def get_browser(session_id: str = None):
             viewport={"width": 1280, "height": 800},
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
-        # Basic stealth
-        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        # --- HYPER-SPEED: BROWSER DIET ---
+        # Block images, fonts, and heavy tracking scripts
+        await page.route("**/*.{png,jpg,jpeg,svg,woff,woff2,gif,webp,ico}", lambda route: route.abort())
+        await page.route(re.compile(r"google-analytics|doubleclick|facebook|amazon-adsystem|googletagmanager"), lambda route: route.abort())
+        
+        # Basic stealth & performance
+        await page.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            // Disable animations for faster visual processing
+            const style = document.createElement('style');
+            style.innerHTML = `
+                *, *::before, *::after {
+                    transition-duration: 0s !important;
+                    animation-duration: 0s !important;
+                    transition-delay: 0s !important;
+                    animation-delay: 0s !important;
+                }
+            `;
+            document.head.appendChild(style);
+        """)
         _browsers[session_id] = browser
         _pages[session_id] = page
 
