@@ -11,7 +11,7 @@ agent_model = get_gemini_model().model_name.replace("models/", "")
 
 resume_agent = Agent(
     name="ResumeApplyAgent",
-    model=agent_model,
+    model="gemini-2.0-flash",
     description="""
 You are an autonomous Job Application Agent. You control a real browser to find and apply to jobs.
 

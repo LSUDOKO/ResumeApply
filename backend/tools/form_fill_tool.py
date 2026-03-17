@@ -2,7 +2,7 @@ from google.genai import types
 import json, re
 from lib.gemini_helper import get_gemini_model
 from lib.session_context import current_session_id
-
+from lib.gcp_helper import gcp_helper
 
 async def form_fill_tool(form_fields: list, resume_profile: dict) -> dict:
     """
@@ -80,7 +80,6 @@ async def mark_job_applied_tool(job_title: str, company: str, match_score: int) 
     if session_id:
         try:
             from routers.websocket import manager
-            from lib.local_db import db
             import datetime
 
             application = {
@@ -113,7 +112,6 @@ async def mark_job_skipped_tool(job_title: str, company: str, reason: str) -> di
     if session_id:
         try:
             from routers.websocket import manager
-            from lib.local_db import db
             import datetime
 
             application = {

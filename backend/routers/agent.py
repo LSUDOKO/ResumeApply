@@ -14,7 +14,7 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
     preferences = payload["preferences"]
     voice_command = payload.get("voice_command", "")
 
-    from lib.local_db import db
+    from lib.gcp_helper import gcp_helper as db
     session_data = db.get_session(session_id)
     profile = session_data.get("profile", {}) if session_data else {}
 
@@ -111,6 +111,11 @@ async def get_results(session_id: str):
     session_data = db.get_session(session_id)
     if not session_data:
         return {"applications": [], "total_applied": 0, "total_skipped": 0}
+
+    from lib.gcp_helper import gcp_helper
+    session_data = gcp_helper.get_session(session_id)
+    if not session_data:
+        return {"applications": [], "total_applied": 0, "total_skipped": 0, "session_id": session_id}
 
     applications = session_data.get("applications", [])
     total_applied = sum(1 for a in applications if a.get("status") == "applied")
