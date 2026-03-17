@@ -75,7 +75,7 @@ Talk to the agent live. Powered by Gemini Multimodal Live API over WebRTC. Inter
 **2. Multimodal vision**
 The agent sees the browser the same way you do — screenshots analyzed by Gemini 2.0 Flash. It finds buttons, inputs, and job cards by visual description, not code.
 
-**A3. utonomous form filling**
+**3. utonomous form filling**
 Gemini maps your resume profile to every form field. The agent clicks the field by coordinate, clears it, and types your data. Multi-step forms handled step by step.
 
 **4. Human-in-the-loop**
