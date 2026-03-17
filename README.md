@@ -42,26 +42,27 @@ No DOM scraping. No brittle CSS selectors. Pure multimodal visual understanding.
 
 ## How it works
 
-```
-You speak a command
-       ↓
-Gemini Live API (WebRTC) transcribes it in real-time
-       ↓
-FastAPI agent task spawns on Cloud Run
-       ↓
-Playwright opens a browser (per-session, stealth mode)
-       ↓
-Agent takes screenshot → Gemini 2.0 Flash analyzes it
-       ↓
-navigate_tool clicks elements by visual coordinates
-       ↓
-form_fill_tool maps your resume to each field → types it in
-       ↓
-Screenshots + events stream to your dashboard over WebSocket
-       ↓
-CAPTCHA? Agent pauses → you resolve it → agent continues
-       ↓
-Every application logged with company, role, match score, timestamp
+```mermaid
+flowchart TD
+    A([🎙️ You speak a command]) --> B[Gemini Live API via WebRTC\ntranscribes in real-time]
+    B --> C[FastAPI agent task spawns\non Cloud Run]
+    C --> D[Playwright opens browser\nper-session · stealth mode]
+    D --> E[Agent takes screenshot]
+    E --> F[Gemini 2.0 Flash\nanalyzes the screenshot]
+    F --> G[navigate_tool clicks elements\nby visual coordinates]
+    G --> H[form_fill_tool maps resume\nto each field and types it in]
+    H --> I{CAPTCHA\ndetected?}
+    I -- Yes --> J([⚠️ Agent pauses\nDashboard shows overlay])
+    J --> K([✅ You resolve it\nclick Done])
+    K --> L[Agent resumes]
+    L --> M
+    I -- No --> M[Screenshots + events stream\nto dashboard over WebSocket]
+    M --> N([📋 Application logged\ncompany · role · match score · timestamp])
+
+    style A fill:#c8ff00,color:#000,stroke:none
+    style J fill:#ff6b6b,color:#fff,stroke:none
+    style K fill:#22c55e,color:#fff,stroke:none
+    style N fill:#c8ff00,color:#000,stroke:none
 ```
 
 ---
