@@ -13,6 +13,10 @@ app.add_middleware(CORSMiddleware,
     allow_methods=["*"], 
     allow_headers=["*"])
 
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "ResumeApply Agent API is running"}
+
 # Import routers
 from routers import resume, agent, websocket, session
 app.include_router(resume.router, prefix="/api/resume")

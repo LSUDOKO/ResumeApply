@@ -39,10 +39,7 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
             "message": "Agent initializing browser..."
         })
         try:
-            result = await resume_agent.run_async(
-                user_message=agent_context,
-                session_id=session_id
-            )
+            result = await resume_agent.run_async(agent_context)
             await manager.broadcast(session_id, {
                 "type": "agent_complete",
                 "summary": str(result)

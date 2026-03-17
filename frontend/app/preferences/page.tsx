@@ -18,11 +18,21 @@ export default function PreferencesPage() {
         skip_conditions: ["No remote", "Less than 100k"]
     });
 
-    const handleLaunch = () => {
+    const [launching, setLaunching] = useState(false);
+
+    const handleLaunch = async () => {
+        if (!sessionId) return alert("No session found. Please upload your resume first.");
+        setLaunching(true);
         setPreferences(prefs);
-        if (sessionId) {
-            wsManager.connect(sessionId);
-        }
+        wsManager.connect(sessionId);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        await fetch(`${apiUrl}/api/agent/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, preferences: prefs })
+        });
+
         router.push("/dashboard");
     };
 
@@ -96,10 +106,11 @@ export default function PreferencesPage() {
                 <div className="mt-16">
                     <button
                         onClick={handleLaunch}
-                        className="w-full bg-primary text-black text-2xl font-black py-8 uppercase tracking-tighter flex items-center justify-center gap-4 hover:scale-[1.02] transition-transform shadow-[8px_8px_0px_#ffffff20]"
+                        disabled={launching}
+                        className="w-full bg-primary text-black text-2xl font-black py-8 uppercase tracking-tighter flex items-center justify-center gap-4 hover:scale-[1.02] transition-transform shadow-[8px_8px_0px_#ffffff20] disabled:opacity-60 disabled:scale-100 disabled:cursor-not-allowed"
                     >
-                        UNLEASH THE AGENT
-                        <span className="material-symbols-outlined text-4xl">bolt</span>
+                        {launching ? "INITIALIZING..." : "UNLEASH THE AGENT"}
+                        <span className="material-symbols-outlined text-4xl">{launching ? "hourglass_top" : "bolt"}</span>
                     </button>
                     <p className="text-center mt-6 text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse">
                         READY TO SCRAPE • READY TO APPLY • READY TO WIN
