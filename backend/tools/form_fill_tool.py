@@ -91,11 +91,7 @@ async def mark_job_applied_tool(job_title: str, company: str, match_score: int) 
             }
 
             # Persist to Firestore
-            session_data = gcp_helper.get_session(session_id) or {}
-            apps = session_data.get("applications", [])
-            apps.append(application)
-            session_data["applications"] = apps
-            gcp_helper.save_session(session_id, session_data)
+            gcp_helper.append_application(session_id, application)
 
             await manager.broadcast(session_id, {
                 "type": "job_applied",

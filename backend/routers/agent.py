@@ -1,12 +1,12 @@
 from fastapi import APIRouter, BackgroundTasks
 from agents.resume_agent import resume_agent
 import asyncio
+from lib.gcp_helper import gcp_helper
 
 router = APIRouter()
 
 # Track running agent tasks
 _running_sessions: dict = {}
-
 
 @router.post("/start")
 async def start_agent(payload: dict, background_tasks: BackgroundTasks):
@@ -14,14 +14,12 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
     preferences = payload["preferences"]
     voice_command = payload.get("voice_command", "")
 
-    from lib.gcp_helper import gcp_helper as db
-    session_data = db.get_session(session_id)
-    profile = session_data.get("profile", {}) if session_data else {}
-
-    # Store preferences in session for tools to access
-    session_data = session_data or {}
+    session_data = gcp_helper.get_session(session_id) or {}
+    profile = session_data.get("profile", {})
+    
+    # Store preferences in session
     session_data["preferences"] = preferences
-    db.save_session(session_id, session_data)
+    gcp_helper.save_session(session_id, session_data)
 
     agent_context = (
         f"Voice Command: {voice_command}. "
@@ -55,7 +53,6 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
                 "error": str(e)
             })
         finally:
-            # Clean up browser and pause event for this session
             try:
                 from tools.screenshot_tool import close_browser
                 await close_browser(session_id)
@@ -68,7 +65,6 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
     _running_sessions[session_id] = task
     return {"status": "started", "session_id": session_id}
 
-
 @router.post("/stop")
 async def stop_agent(payload: dict):
     session_id = payload["session_id"]
@@ -79,35 +75,31 @@ async def stop_agent(payload: dict):
     cleanup_session(session_id)
     return {"status": "stopped"}
 
-
 @router.post("/pause")
 async def pause_agent(payload: dict):
     session_id = payload["session_id"]
     from routers.websocket import manager, get_pause_event
-    get_pause_event(session_id).clear()  # suspends the agent at next tool boundary
+    get_pause_event(session_id).clear()
     await manager.broadcast(session_id, {
         "type": "agent_paused",
         "message": payload.get("message", "Agent paused by user.")
     })
     return {"status": "paused"}
 
-
 @router.post("/resume")
 async def resume_agent_endpoint(payload: dict):
     session_id = payload["session_id"]
     from routers.websocket import manager, get_pause_event
-    get_pause_event(session_id).set()  # unblocks the agent immediately
+    get_pause_event(session_id).set()
     await manager.broadcast(session_id, {
         "type": "agent_resumed",
         "message": "Agent resuming..."
     })
     return {"status": "resumed"}
 
-
 @router.get("/results/{session_id}")
 async def get_results(session_id: str):
     """Returns all applications logged for a session."""
-    from lib.gcp_helper import gcp_helper
     session_data = gcp_helper.get_session(session_id)
     if not session_data:
         return {"applications": [], "total_applied": 0, "total_skipped": 0, "session_id": session_id}
@@ -122,7 +114,6 @@ async def get_results(session_id: str):
         "total_skipped": total_skipped,
         "session_id": session_id
     }
-
 
 @router.get("/status/{session_id}")
 async def get_status(session_id: str):
