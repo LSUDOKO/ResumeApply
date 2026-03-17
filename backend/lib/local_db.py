@@ -43,4 +43,18 @@ class LocalDatabase:
             f.write(content)
         return str(path)
 
+    def append_application(self, session_id: str, application: dict):
+        """Atomically appends an application to a session."""
+        db = self._read_db()
+        session = db["sessions"].get(session_id, {})
+        apps = session.get("applications", [])
+        apps.append(application)
+        session["applications"] = apps
+        db["sessions"][session_id] = session
+        self._write_db(db)
+
+    def get_applications(self, session_id: str) -> list:
+        session = self.get_session(session_id)
+        return session.get("applications", []) if session else []
+
 db = LocalDatabase()

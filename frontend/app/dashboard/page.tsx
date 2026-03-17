@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAgentStore } from "@/lib/store";
 import { wsManager } from "@/lib/websocket";
 import { BrowserFeed } from "@/components/BrowserFeed";
@@ -16,16 +16,27 @@ export default function DashboardPage() {
     } = useAgentStore();
     const router = useRouter();
 
+    const [isPaused, setIsPaused] = useState(false);
+    const [interventionMsg, setInterventionMsg] = useState<string | null>(null);
+
     useEffect(() => {
         if (!sessionId) {
             router.push('/upload');
             return;
         }
 
-        // Listen for completion to auto-navigate
+        wsManager.connect(sessionId);
+
         const unsubComplete = wsManager.on('agent_complete', () => {
             setAgentStatus('complete');
             setTimeout(() => router.push('/tracker'), 3000);
+        });
+
+        // CAPTCHA / intervention pause
+        const unsubPaused = wsManager.on('agent_paused', (data: any) => {
+            setIsPaused(true);
+            setAgentStatus('paused');
+            setInterventionMsg(data.message || 'Agent needs your attention.');
         });
 
         // Elapsed time counter
@@ -37,6 +48,7 @@ export default function DashboardPage() {
 
         return () => {
             unsubComplete();
+            unsubPaused();
             clearInterval(timer);
         };
     }, [sessionId]);
@@ -51,8 +63,59 @@ export default function DashboardPage() {
         router.push('/tracker');
     };
 
+    const handlePause = async () => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        if (isPaused) {
+            // Resume
+            await fetch(`${apiUrl}/api/agent/resume`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            });
+            setIsPaused(false);
+            setAgentStatus('running');
+        } else {
+            // Pause
+            await fetch(`${apiUrl}/api/agent/pause`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, message: 'Paused by user.' })
+            });
+            setIsPaused(true);
+            setAgentStatus('paused');
+        }
+    };
+
+    const handleInterventionDone = () => {
+        // Tell backend user resolved the CAPTCHA / intervention
+        wsManager.send({ type: 'intervention_response', status: 'resolved', session_id: sessionId });
+        setInterventionMsg(null);
+        setIsPaused(false);
+        setAgentStatus('running');
+    };
+
     return (
         <div className="bg-background-dark min-h-screen pt-24 flex flex-col overflow-hidden text-slate-100 selection:bg-primary selection:text-black">
+
+            {/* CAPTCHA / Intervention Overlay — shown only when needed */}
+            {interventionMsg && (
+                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+                    <div className="bg-background-dark border-4 border-primary p-10 max-w-lg w-full mx-4 shadow-[8px_8px_0px_rgba(255,255,255,0.1)]">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Agent Needs You</p>
+                        <h2 className="text-2xl font-black uppercase text-white mb-4">{interventionMsg}</h2>
+                        <p className="text-slate-400 text-sm mb-8">
+                            Resolve the issue in the browser feed on the left, then click Done to resume the agent.
+                        </p>
+                        <button
+                            onClick={handleInterventionDone}
+                            className="w-full py-4 bg-primary text-black font-black uppercase tracking-widest text-lg hover:brightness-110 transition-all"
+                        >
+                            DONE — RESUME AGENT
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <main className="flex-1 flex overflow-hidden">
                 {/* Left: Agent's View (Browser Stream) */}
                 <section className="w-[55%] p-6 flex flex-col gap-6 border-r border-primary/10 bg-black/20">
@@ -70,8 +133,15 @@ export default function DashboardPage() {
                         >
                             STOP AGENT
                         </button>
-                        <button className="flex-1 py-4 border-2 border-white/10 text-white/40 font-black uppercase tracking-widest text-lg hover:border-primary/40 hover:text-white transition-all">
-                            PAUSE SESSION
+                        <button
+                            onClick={handlePause}
+                            className={`flex-1 py-4 border-2 font-black uppercase tracking-widest text-lg transition-all ${
+                                isPaused
+                                    ? 'border-primary text-primary hover:bg-primary hover:text-black'
+                                    : 'border-white/10 text-white/40 hover:border-primary/40 hover:text-white'
+                            }`}
+                        >
+                            {isPaused ? 'RESUME SESSION' : 'PAUSE SESSION'}
                         </button>
                     </div>
                 </section>

@@ -11,7 +11,13 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function TrackerPage() {
     const mainRef = useRef<HTMLDivElement>(null);
-    const { sessionId, totalApplied, totalSkipped, applications: storeApps } = useAgentStore();
+    const { sessionId, totalApplied, totalSkipped, elapsedSeconds, applications: storeApps } = useAgentStore();
+
+    const formatTime = (s: number) => {
+        const m = Math.floor(s / 60).toString().padStart(2, '0');
+        const sec = (s % 60).toString().padStart(2, '0');
+        return `${m}:${sec}`;
+    };
     const [results, setResults] = useState<any[]>(storeApps);
 
     useEffect(() => {
@@ -101,7 +107,7 @@ export default function TrackerPage() {
                     <div className="stat-card bg-background-dark p-8">
                         <p className="text-white/60 text-sm font-bold tracking-widest uppercase mb-2">Active Time</p>
                         <div className="flex items-baseline gap-1">
-                            <span className="stat-number text-primary text-8xl font-bold leading-none">08:12</span>
+                            <span className="stat-number text-primary text-8xl font-bold leading-none">{formatTime(elapsedSeconds)}</span>
                         </div>
                     </div>
                 </div>
