@@ -69,22 +69,22 @@ flowchart TD
 
 ## Features
 
-**Voice-first control**
+**1. Voice-first control**
 Talk to the agent live. Powered by Gemini Multimodal Live API over WebRTC. Interrupt it mid-session. It listens.
 
-**Multimodal vision**
+**2. Multimodal vision**
 The agent sees the browser the same way you do — screenshots analyzed by Gemini 2.0 Flash. It finds buttons, inputs, and job cards by visual description, not code.
 
-**Autonomous form filling**
+**A3. utonomous form filling**
 Gemini maps your resume profile to every form field. The agent clicks the field by coordinate, clears it, and types your data. Multi-step forms handled step by step.
 
-**Human-in-the-loop**
+**4. Human-in-the-loop**
 CAPTCHA or MFA detected? The agent pauses, sends a WebSocket alert, and shows an overlay on your dashboard. You resolve it, click Done, agent resumes exactly where it left off.
 
-**Live dashboard**
+**5. Live dashboard**
 Real-time browser feed, agent reasoning stream, voice command panel, application counter — all updating over WebSocket as the agent works.
 
-**Google Cloud native**
+**6. Google Cloud native**
 Backend on Cloud Run. CI/CD via Cloud Build. Resume storage on GCS. Automated IaC deployment in one command.
 
 ---
