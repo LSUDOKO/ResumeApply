@@ -12,8 +12,17 @@ node_modules/
 
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
+*.pyo
+
+# GCP Service Account Keys (NEVER commit these)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!jsconfig.json
 
 # testing
 coverage/

@@ -31,16 +31,70 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
         from lib.session_context import current_session_id
         current_session_id.set(session_id)
         from routers.websocket import manager
+        from google.adk.runners import Runner
+        from google.adk.sessions.in_memory_session_service import InMemorySessionService
+        from google.genai import types as genai_types
 
         await manager.broadcast(session_id, {
             "type": "agent_started",
-            "message": "Agent initializing browser..."
+            "message": "Hyper-Speed Agent initializing..."
         })
+
         try:
-            result = await resume_agent.run_async(agent_context)
+            # Initialize a Runner for live event streaming
+            session_service = InMemorySessionService()
+            # MUST create the session in the ADK service first
+            session_service.create_session(
+                app_name="ResumeApply",
+                user_id="default",
+                session_id=session_id
+            )
+            
+            runner = Runner(
+                app_name="ResumeApply",
+                agent=resume_agent,
+                session_service=session_service
+            )
+            
+            # Start a new message session
+            user_msg = genai_types.Content(
+                role="user",
+                parts=[genai_types.Part.from_text(text=agent_context)]
+            )
+
+            final_result = ""
+            async for event in runner.run_async(
+                user_id="default",
+                session_id=session_id,
+                new_message=user_msg
+            ):
+                print(f"DEBUG: Agent Event Received: {type(event)}")
+                # Broadcast thoughts / reasoning
+                if hasattr(event, "content") and event.content and event.content.parts:
+                    for part in event.content.parts:
+                        if hasattr(part, "text") and part.text:
+                            print(f"DEBUG: Agent Thinking: {part.text}")
+                            await manager.broadcast(session_id, {
+                                "type": "agent_thinking",
+                                "text": part.text
+                            })
+                            if event.is_final_response():
+                                final_result += part.text
+
+                # Handle tool status updates for frontend feedback
+                # Use actions.function_calls for ADK events
+                if hasattr(event, "actions") and event.actions and event.actions.function_calls:
+                    for call in event.actions.function_calls:
+                        tool_name = getattr(call, "name", "tool")
+                        print(f"DEBUG: Agent Tool Call: {tool_name}")
+                        await manager.broadcast(session_id, {
+                            "type": "agent_thinking",
+                            "text": f"SYSTEM: Running tool: {tool_name}..."
+                        })
+
             await manager.broadcast(session_id, {
                 "type": "agent_complete",
-                "summary": str(result)
+                "summary": final_result or "Agent work finished."
             })
         except asyncio.CancelledError:
             await manager.broadcast(session_id, {
@@ -48,6 +102,8 @@ async def start_agent(payload: dict, background_tasks: BackgroundTasks):
                 "message": "Agent stopped by user."
             })
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             await manager.broadcast(session_id, {
                 "type": "agent_error",
                 "error": str(e)

@@ -39,7 +39,7 @@ export default function Footer() {
                     <Link href="#" className="hover:text-primary">Twitter</Link>
                     <Link href="#" className="hover:text-primary">LinkedIn</Link>
                 </div>
-                <p className="text-slate-600 text-xs font-mono">©2024 RESUMEAPPLY_AGENT_CORE_v2.0.1</p>
+                <p className="text-slate-600 text-xs font-mono">©2026 RESUMEAPPLY_AGENT_CORE_v2.0.1</p>
             </div>
         </footer>
     );

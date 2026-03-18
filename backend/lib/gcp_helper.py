@@ -13,12 +13,15 @@ class GCPHelper:
         self._storage_client = None
         self._collection = "sessions"
         self._bucket_name = os.getenv("GCS_BUCKET")
+        self._project_id = os.getenv("PROJECT_ID")
 
     def _get_db(self):
         if self._db is None:
             try:
                 from google.cloud import firestore
-                self._db = firestore.Client(project=os.getenv("PROJECT_ID"))
+                # Google libraries automatically look for GOOGLE_APPLICATION_CREDENTIALS
+                self._db = firestore.Client(project=self._project_id)
+                print(f"Firestore initialized for project: {self._project_id}")
             except Exception as e:
                 print(f"Firestore unavailable, using in-memory store: {e}")
                 self._db = "memory"
@@ -28,7 +31,8 @@ class GCPHelper:
         if self._storage_client is None:
             try:
                 from google.cloud import storage
-                self._storage_client = storage.Client(project=os.getenv("PROJECT_ID"))
+                self._storage_client = storage.Client(project=self._project_id)
+                print(f"GCS initialized for project: {self._project_id}")
             except Exception as e:
                 print(f"GCS unavailable: {e}")
                 self._storage_client = "memory"
