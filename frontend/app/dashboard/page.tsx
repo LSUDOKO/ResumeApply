@@ -13,7 +13,8 @@ export default function DashboardPage() {
     const {
         sessionId, agentStatus, setAgentStatus,
         totalApplied, totalSkipped, setElapsed,
-        agentLogs, addLog, setSessionStartTime
+        agentLogs, addLog, setSessionStartTime,
+        addApplication, incrementApplied, incrementSkipped
     } = useAgentStore();
     const router = useRouter();
 
@@ -33,6 +34,16 @@ export default function DashboardPage() {
         const unsubComplete = wsManager.on('agent_complete', () => {
             setAgentStatus('complete');
             setTimeout(() => router.push('/tracker'), 3000);
+        });
+
+        const unsubApplied = wsManager.on('job_applied', (data: any) => {
+            addApplication(data);
+            incrementApplied();
+        });
+
+        const unsubSkipped = wsManager.on('job_skipped', (data: any) => {
+            addApplication(data);
+            incrementSkipped();
         });
 
         // CAPTCHA / intervention pause
@@ -59,6 +70,8 @@ export default function DashboardPage() {
 
         return () => {
             unsubComplete();
+            unsubApplied();
+            unsubSkipped();
             unsubPaused();
             unsubAll();
             clearInterval(timer);
@@ -188,11 +201,10 @@ export default function DashboardPage() {
                         </button>
                         <button
                             onClick={handlePause}
-                            className={`flex-1 py-4 border-2 font-black uppercase tracking-widest text-lg transition-all ${
-                                isPaused
+                            className={`flex-1 py-4 border-2 font-black uppercase tracking-widest text-lg transition-all ${isPaused
                                     ? 'border-primary text-primary hover:bg-primary hover:text-black'
                                     : 'border-white/10 text-white/40 hover:border-primary/40 hover:text-white'
-                            }`}
+                                }`}
                         >
                             {isPaused ? 'RESUME SESSION' : 'PAUSE SESSION'}
                         </button>

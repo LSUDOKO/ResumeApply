@@ -6,12 +6,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SplitType from "split-type";
 import Link from "next/link";
 import { useAgentStore } from "@/lib/store";
+import { wsManager } from "@/lib/websocket";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function TrackerPage() {
     const mainRef = useRef<HTMLDivElement>(null);
-    const { sessionId, totalApplied, totalSkipped, elapsedSeconds, applications: storeApps, sessionStartTime } = useAgentStore();
+    const { sessionId, totalApplied, totalSkipped, elapsedSeconds, applications: storeApps, sessionStartTime, addApplication, incrementApplied, incrementSkipped } = useAgentStore();
 
     const formatTime = (s: number) => {
         const m = Math.floor(s / 60).toString().padStart(2, '0');
@@ -38,7 +39,6 @@ export default function TrackerPage() {
         const sec = (s % 60).toString().padStart(2, '0');
         return `${h}:${m}:${sec}`;
     };
-    const [results, setResults] = useState<any[]>(storeApps);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -47,13 +47,27 @@ export default function TrackerPage() {
             try {
                 const response = await fetch(`${apiUrl}/api/agent/results/${sessionId}`);
                 const data = await response.json();
-                setResults(data.applications || storeApps);
+                // We sync with the store if it's empty
+                if (storeApps.length === 0 && data.applications) {
+                    data.applications.forEach((app: any) => addApplication(app));
+                }
             } catch (error) {
                 console.error("Failed to fetch results", error);
             }
         };
 
         fetchResults();
+
+        // Also listen for live updates if the session is still active
+        const unsubApplied = wsManager.on('job_applied', (data: any) => {
+            addApplication(data);
+            incrementApplied();
+        });
+
+        const unsubSkipped = wsManager.on('job_skipped', (data: any) => {
+            addApplication(data);
+            incrementSkipped();
+        });
 
         const ctx = gsap.context(() => {
             gsap.from(".stat-card", {
@@ -102,10 +116,14 @@ export default function TrackerPage() {
             });
         }, mainRef);
 
-        return () => ctx.revert();
+        return () => {
+            unsubApplied();
+            unsubSkipped();
+            ctx.revert();
+        };
     }, [sessionId]);
 
-    const displayResults = results;
+    const displayResults = storeApps;
 
     return (
         <div ref={mainRef} className="bg-background-light min-h-screen pt-24 transition-colors duration-300">

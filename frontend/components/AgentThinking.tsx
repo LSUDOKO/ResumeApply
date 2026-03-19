@@ -12,15 +12,19 @@ export function AgentThinking() {
             typewriterEffect(data.text)
         })
 
-        wsManager.on('job_applied', (data) => {
+        const unsubApplied = wsManager.on('job_applied', (data) => {
             setLines(prev => [...prev, `✓ ${data.company} · ${data.job_title} · APPLIED`])
         })
 
-        wsManager.on('job_skipped', (data) => {
+        const unsubSkipped = wsManager.on('job_skipped', (data) => {
             setLines(prev => [...prev, `✗ ${data.company} · SKIPPED · ${data.reason}`])
         })
 
-        return () => unsubThinking()
+        return () => {
+            unsubThinking()
+            unsubApplied()
+            unsubSkipped()
+        }
     }, [])
 
     const typewriterEffect = (text: string) => {
